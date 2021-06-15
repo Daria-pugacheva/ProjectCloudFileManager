@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:controller="ru.gb.pugacheva.client.controller.Controller"
+      xmlns:fx="http://javafx.com/fxml" alignment="center" prefWidth="800.0" prefHeight="600.0">
+    <HBox fx:id="loginPanel">
+        <TextField fx:id="loginField" HBox.hgrow="ALWAYS" promptText="Введите логин"/>
+        <PasswordField fx:id="passwordField" HBox.hgrow="ALWAYS" promptText="Введите пароль"/>
+        <Button text="Войти" onAction="#login"/>
+    </HBox>
+    <HBox fx:id="workPanel">
+        <VBox HBox.hgrow="ALWAYS">
+            <TextField HBox.hgrow="ALWAYS" text= "Файловая система клиента" editable="false"/>
+            <HBox>
+                <TextField fx:id="clientPathToFile" HBox.hgrow="ALWAYS" editable="false"/>
+                <Button text="Вверх" onAction="#clientMoveUpInFilePath"/>
+            </HBox>
+            <TableView fx:id="clientFiles" HBox.hgrow="ALWAYS"/>
+        </VBox>
+        <VBox  HBox.hgrow="ALWAYS">
+            <TextField HBox.hgrow="ALWAYS" text= "Папка с файлами в облаке" editable="false"/>
+            <HBox>
+                <TextField fx:id="serverPathToFile" HBox.hgrow="ALWAYS" editable="false"/>
+                <Button text="Вверх" onAction="#serverMoveUpInFilePath"/>
+            </HBox>
+            <TableView fx:id="serverFiles" HBox.hgrow="ALWAYS"/>
+        </VBox>
+    </HBox>
+
+    <HBox>
+        <Button fx:id="download" text="Загрузить файл из облака" onAction="#download"/>
+        <Button fx:id="upload" text="Выгрузить файл в облако" onAction="#upload"/>
+    </HBox>
+
+</VBox>
+
+
+        <!--<AnchorPane fx:controller="ru.gb.pugacheva.client.controller.Controller" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" >-->
+        <!--   <children>-->
+        <!--      <TextField fx:id="commandTextField" layoutX="12.0" layoutY="6.0" prefHeight="31.0" prefWidth="451.0" />-->
+        <!--      <Button layoutX="471.0" layoutY="9.0" mnemonicParsing="false" onAction="#sendCommand" prefHeight="25.0" prefWidth="119.0" text="Выполнить" />-->
+        <!--      <TextArea fx:id="commandResultTextArea" layoutX="10.0" layoutY="43.0" prefHeight="350.0" prefWidth="579.0" />-->
+        <!--   </children>-->
+        <!--</AnchorPane>-->
+
+
