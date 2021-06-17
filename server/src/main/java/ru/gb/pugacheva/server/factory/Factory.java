@@ -11,12 +11,8 @@ import java.util.List;
 
 public class Factory {
 
-    public static ServerService getServerService (){
-        return SocketServerService.getInstance();
-    }
-
-    public static ClientService getClientService(Socket socket){
-        return new IOClientService(socket, getCommandDictionaryService());
+   public static ServerService getServerService (){
+        return new NettyServerService();
     }
 
     public static CommandDictionaryService getCommandDictionaryService(){

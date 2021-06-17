@@ -11,7 +11,7 @@ import java.sql.SQLException;
 
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private DatabaseConnectionService dbConnection;
+    private DatabaseConnectionService dbConnection; //TODO - проверить, что соединение с базой закрыли в конце работы.
 
     @Override
     public void open() {

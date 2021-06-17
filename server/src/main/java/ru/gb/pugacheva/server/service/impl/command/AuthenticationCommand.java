@@ -24,15 +24,16 @@ public class AuthenticationCommand implements CommandService {
 
     private String process (String login, String password ){
         authenticationService = Factory.getAuthenticationService();
-//        if(authenticationService.isClientRegistered(login, password)){  //TODO : здесь какой-то косяк идентификацией. Закомментирован неработающий код
-//            return "loginOK";
-//        }else if (authenticationService.registerClient(login, password)){
-//            File file = new File("C:/java/Course_Project_Cloud/my-cloud-project/Cloud/" + login);
-//            file.mkdir();
-//            return "registrationOK";
-//        }
-//        return "registrationFailed";
-        return "loginOK"; // TODO: строка пока для тестирования работы . надо заменить на идентификацию
+        authenticationService.open();
+        if(authenticationService.isClientRegistered(login, password)){
+            return "loginOK"; //тут все срабатывает
+        }else if (authenticationService.registerClient(login, password)){
+            File file = new File(String.format("C:/java/Course_Project_Cloud/my-cloud-project/Cloud/%s",login));
+            file.mkdir();
+            return "registrationOK"; //TODO: проверить метод регистрации
+        }
+        return "registrationFailed";
+
     }
 
     @Override

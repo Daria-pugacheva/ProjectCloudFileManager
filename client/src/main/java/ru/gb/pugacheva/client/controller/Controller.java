@@ -34,13 +34,17 @@ public class Controller implements Initializable {
 
     private NetworkService networkService;
 
+    public NetworkService getNetworkService() {
+        return networkService;
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         workPanel.setVisible(false);
 
-        networkService = Factory.getNetworkService();
+        networkService = Factory.getNetworkService(); //TODO: возможно, момент подключения лучше перенести на кнопку регистрации?
 
-        TableColumn <FileInfo,String > clientFileTypeColumn = new TableColumn<>("Тип");
+        TableColumn <FileInfo,String > clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: упаковать в метод + добавить формирование таблицы в части серверной
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
         clientFileTypeColumn.setPrefWidth(48);
 
@@ -107,9 +111,12 @@ public class Controller implements Initializable {
 
     private void createCommandResultHandler(){
         new Thread(() -> {
+
+            byte [] buffer = new byte [1024];
             //в этом цикле по-идее происходит авторизация
             while (true){
-                String resultCommand = networkService.readCommandResult(); //блокирующая
+                int bytesFromBuffer = networkService.readCommandResult(buffer); //блокирующая
+                String resultCommand = new String(buffer,0,bytesFromBuffer);
                 if(resultCommand.startsWith("registrationOK") || resultCommand.startsWith("loginOK")) {
                     Platform.runLater(() -> loginPanel.setVisible(false));
                     Platform.runLater(() -> workPanel.setVisible(true));
