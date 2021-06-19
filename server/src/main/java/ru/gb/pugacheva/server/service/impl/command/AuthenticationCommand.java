@@ -26,11 +26,12 @@ public class AuthenticationCommand implements CommandService {
         authenticationService = Factory.getAuthenticationService();
         authenticationService.open();
         if(authenticationService.isClientRegistered(login, password)){
-            return "loginOK"; //тут все срабатывает
+            return "loginOK";
         }else if (authenticationService.registerClient(login, password)){
-            File file = new File(String.format("C:/java/Course_Project_Cloud/my-cloud-project/Cloud/%s",login));
+            String pathToDir = String.format("C:/java/Course_Project_Cloud/my-cloud-project/Cloud/%s/",login);
+            File file = new File(pathToDir);
             file.mkdir();
-            return "registrationOK"; //TODO: проверить метод регистрации
+            return "registrationOK";
         }
         return "registrationFailed";
 

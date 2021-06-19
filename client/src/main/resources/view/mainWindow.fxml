@@ -30,8 +30,8 @@
     </HBox>
 
     <HBox>
-        <Button fx:id="download" text="Загрузить файл из облака" onAction="#download"/>
-        <Button fx:id="upload" text="Выгрузить файл в облако" onAction="#upload"/>
+        <Button fx:id="download" focusTraversable="false" text="Загрузить файл из облака" onAction="#download"/>
+        <Button fx:id="upload" focusTraversable="false" text="Выгрузить файл в облако" onAction="#upload"/>
     </HBox>
 
 </VBox>

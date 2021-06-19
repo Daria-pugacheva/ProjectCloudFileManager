@@ -1,4 +1,4 @@
-package ru.gb.pugacheva.client.controller;
+package ru.gb.pugacheva.common.domain;
 
 import java.io.IOException;
 import java.nio.file.Files;

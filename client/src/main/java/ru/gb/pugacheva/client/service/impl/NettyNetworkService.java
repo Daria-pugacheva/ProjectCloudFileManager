@@ -59,6 +59,7 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
 
     @Override
     public void closeConnection() {
+        channel.close(); // так просто ведь?
 
     }
 }

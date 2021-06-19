@@ -47,14 +47,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public boolean registerClient(String login, String password) {
         if(!isClientRegistered(login,password) && !isLoginBusy(login)) {
-            String query = String.format("insert into clients set (login, pass) values ('%s','%s');", login, password);
+            String query = String.format("insert into clients (login, pass) values ('%s','%s');", login, password);
             try {
-                dbConnection.getStmt().executeQuery(query);
+                dbConnection.getStmt().executeUpdate(query);
                 return true;
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }else{
+        }else if(isLoginBusy(login)){ // TODO: где-то ошибка (алерт не срабатывает)
             Alert choseAnotherLogin = new Alert(Alert.AlertType.WARNING,"Такой логин уже существует" +
                     " с другим паролем. Введите другую пару логин/пароль для регистрации", ButtonType.OK);
             choseAnotherLogin.showAndWait();

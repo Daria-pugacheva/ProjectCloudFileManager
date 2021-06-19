@@ -10,9 +10,9 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import ru.gb.pugacheva.client.factory.Factory;
 import ru.gb.pugacheva.client.service.NetworkService;
+import ru.gb.pugacheva.common.domain.FileInfo;
 
 import java.io.IOException;
 import java.net.URL;
@@ -34,16 +34,22 @@ public class Controller implements Initializable {
 
     private NetworkService networkService;
 
-    public NetworkService getNetworkService() {
-        return networkService;
-    }
-
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         workPanel.setVisible(false);
 
         networkService = Factory.getNetworkService(); //TODO: возможно, момент подключения лучше перенести на кнопку регистрации?
 
+        makeClientTable();
+        makeServerTable();
+
+        createClientListFiles(Paths.get("C:/"));  // выводим изначально систему от диска С. МОЖЕТ, перенести на авторизацию
+
+        createCommandResultHandler();
+
+    }
+
+    private void makeClientTable() {
         TableColumn <FileInfo,String > clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: упаковать в метод + добавить формирование таблицы в части серверной
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
         clientFileTypeColumn.setPrefWidth(48);
@@ -74,10 +80,9 @@ public class Controller implements Initializable {
             };
         });
 
-
         clientFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn,clientFileSizeColumn);
 
-        clientFiles.setOnMouseClicked(new EventHandler<MouseEvent>() {
+        clientFiles.setOnMouseClicked(new EventHandler<MouseEvent>() { //TODO: вынести отдельным методом(общим со стр.133)
             @Override
             public void handle(MouseEvent event) {
                 if(event.getClickCount() ==2){
@@ -90,19 +95,75 @@ public class Controller implements Initializable {
 
             }
         });
-
-        createClientListFiles(Paths.get("C:/"));  // выводим изначально систему от диска С. МОЖЕТ, перенести на авторизацию
-
-        createCommandResultHandler();
-
     }
+
+    private void makeServerTable() {
+        TableColumn <FileInfo,String > clientFileTypeColumn = new TableColumn<>("Тип");
+        clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
+        clientFileTypeColumn.setPrefWidth(48);
+
+        TableColumn <FileInfo,String > clientFileNameColumn = new TableColumn<>("Имя файла");
+        clientFileNameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileName()));
+        clientFileNameColumn.setPrefWidth(240);
+
+        TableColumn <FileInfo,Long > clientFileSizeColumn = new TableColumn<>("Размер файла");
+        clientFileSizeColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
+        clientFileSizeColumn.setPrefWidth(120);
+        clientFileSizeColumn.setCellFactory(column -> {
+            return new TableCell<FileInfo,Long>(){
+                @Override
+                protected void updateItem(Long item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if(item ==null || empty){
+                        setText(null);
+                        setStyle("");
+                    }else{
+                        String text = String.format("%,d bytes",item);
+                        if(item==-1L){
+                            text = "DIR";
+                        }
+                        setText(text);
+                    }
+                }
+            };
+        });
+
+        serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn,clientFileSizeColumn);
+
+        serverFiles.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if(event.getClickCount() ==2){
+                    Path currentPath = Paths.get(serverPathToFile.getText());
+                    Path newPath = currentPath.resolve(serverFiles.getSelectionModel().getSelectedItem().getFileName());
+                    if(Files.isDirectory(newPath)){
+                        createClientListFiles(newPath);
+                    }
+                }
+            }
+        });
+    }
+
 
     public void createClientListFiles (Path path){ // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
         try {
             clientPathToFile.setText(path.normalize().toAbsolutePath().toString());
             clientFiles.getItems().clear();
             clientFiles.getItems().addAll(Files.list(path).map(FileInfo :: new).collect(Collectors.toList()));
-            clientFiles.sort(); // проверить, как получается сортировка
+            clientFiles.sort();
+
+        } catch (IOException e) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Не удалось обновить список файлов", ButtonType.OK);
+            alert.showAndWait();
+        }
+    }
+
+    public void createServerListFiles (Path path){ // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
+        try {
+            serverPathToFile.setText(path.normalize().toAbsolutePath().toString());
+            serverFiles.getItems().clear();
+            serverFiles.getItems().addAll(Files.list(path).map(FileInfo :: new).collect(Collectors.toList()));
+            serverFiles.sort();
         } catch (IOException e) {
             Alert alert = new Alert(Alert.AlertType.WARNING, "Не удалось обновить список файлов", ButtonType.OK);
             alert.showAndWait();
@@ -159,3 +220,5 @@ public class Controller implements Initializable {
 
     }
 }
+
+//clientFiles.getSelectionModel().getSelectedItem().getFileName(); - последовательность для поиска имени файла
