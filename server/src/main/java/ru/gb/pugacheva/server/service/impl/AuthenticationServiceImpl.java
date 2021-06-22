@@ -54,10 +54,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        }else if(isLoginBusy(login)){ // TODO: где-то ошибка (алерт не срабатывает)
-            Alert choseAnotherLogin = new Alert(Alert.AlertType.WARNING,"Такой логин уже существует" +
-                    " с другим паролем. Введите другую пару логин/пароль для регистрации", ButtonType.OK);
-            choseAnotherLogin.showAndWait();
+        }else if(isLoginBusy(login)){
+            System.out.println("логин занят"); // для проверки (печать в консоль)
         }
         return false;
     }

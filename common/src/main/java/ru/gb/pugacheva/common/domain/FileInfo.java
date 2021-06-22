@@ -26,6 +26,7 @@ public class FileInfo {
     private FileType fileType;
 
     private long size;
+    private Path path;
 
     //РАСШИРЕНИЕ ЕЩЕ МОЖНО ДОБАВИТЬ.
 
@@ -54,8 +55,17 @@ public class FileInfo {
         this.size = size;
     }
 
+    public Path getPath() {
+        return path;
+    }
+
+    public void setPath(Path path) {
+        this.path = path;
+    }
+
     public FileInfo(Path path) {
         try {
+            this.path = path;
             this.fileName=path.getFileName().toString();
             this.size = Files.size(path);
             this.fileType = Files.isDirectory(path) ? FileType.DIRECTORY : FileType.FILE;
@@ -63,7 +73,7 @@ public class FileInfo {
                 this.size = -1L;
             }
         } catch (IOException e) {
-            throw new RuntimeException("Не удалось собрать информацию о фале по пути " + path);
+            throw new RuntimeException("Не удалось собрать информацию о файле по пути " + path);
         }
     }
 }

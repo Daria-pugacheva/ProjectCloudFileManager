@@ -1,8 +1,10 @@
 package ru.gb.pugacheva.server.service;
 
-public interface CommandService {
+import ru.gb.pugacheva.common.domain.Command;
 
-    String processCommand (String  command);
+public interface CommandService <T> {
+
+     T processCommand (Command command);
 
     String getCommand();
 

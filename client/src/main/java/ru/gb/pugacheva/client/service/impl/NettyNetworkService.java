@@ -5,10 +5,14 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import ru.gb.pugacheva.client.core.ClientHandler;
 import ru.gb.pugacheva.client.service.NetworkService;
+import ru.gb.pugacheva.common.domain.Command;
 
 public class NettyNetworkService implements NetworkService {  // ПОКА НЕПРИМЕНЯЕМЫЙ КОД (ПОКА ИСПОЛЬЗУЮ ВАРИАНТ IO)
 
@@ -29,9 +33,10 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
                             @Override
                             protected void initChannel(SocketChannel socketChannel) throws Exception {
                                 channel = socketChannel;
-                                socketChannel.pipeline().addLast(new StringDecoder()) //добавили входящий и исходящий хэндлер
-                                        .addLast(new StringEncoder())
-                                        .addLast(new ClientHandler());
+                                socketChannel.pipeline()
+                                        .addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null))) //добавили входящий и исходящий хэндлер
+                                        .addLast(new ObjectEncoder());
+                                        //.addLast(new ClientHandler());
                             }
                         });
                 ChannelFuture future = bootstrap.connect(SERVER_HOST,SERVER_PORT).sync();
@@ -44,22 +49,21 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
         }).start();
     }
 
-
-
     @Override
-    public void sendCommand(String command) {
-        channel.writeAndFlush(command); // за счет добавления StringDecoder и StringEncoder (стр.32 выше) строка преобразуется при отправке в байты
+    public void sendCommand(Command command) {
+        channel.writeAndFlush(command);
 
     }
 
     @Override
-    public int readCommandResult(byte [] buffer) {
-        return 0; // ЗАГЛУШКА
+    public Object readCommandResult() {
+        return channel.read();
     }
 
     @Override
     public void closeConnection() {
-        channel.close(); // так просто ведь?
-
+        if(channel.isOpen()) {
+            channel.close();
+        }// так просто ведь?
     }
 }

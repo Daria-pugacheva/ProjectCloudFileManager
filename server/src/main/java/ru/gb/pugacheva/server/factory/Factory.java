@@ -3,6 +3,7 @@ package ru.gb.pugacheva.server.factory;
 import ru.gb.pugacheva.server.service.*;
 import ru.gb.pugacheva.server.service.impl.*;
 import ru.gb.pugacheva.server.service.impl.command.AuthenticationCommand;
+import ru.gb.pugacheva.server.service.impl.command.ListCreatingCommand;
 import ru.gb.pugacheva.server.service.impl.command.ViewFilesInDirCommand;
 
 import java.net.Socket;
@@ -20,7 +21,7 @@ public class Factory {
     }
 
     public static List<CommandService> getCommandServices (){
-        return Arrays.asList(new ViewFilesInDirCommand(),new AuthenticationCommand());
+        return Arrays.asList(new AuthenticationCommand(), new ListCreatingCommand());
     }
 
     public static DatabaseConnectionService getDatabaseConnectionService(){
@@ -29,5 +30,10 @@ public class Factory {
 
     public static AuthenticationService getAuthenticationService(){
         return new AuthenticationServiceImpl();
+    }
+
+
+    public static ListOfFilesService getListOfFilesService(){
+        return new ListOfFilesService();
     }
 }

@@ -1,5 +1,6 @@
 package ru.gb.pugacheva.server.service.impl;
 
+import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.CommandDictionaryService;
 import ru.gb.pugacheva.server.service.CommandService;
@@ -27,12 +28,12 @@ public class CommandDictionaryServiceImpl implements CommandDictionaryService {
     }
 
     @Override
-    public String processCommand(String command) {
-        String [] commandParts = command.split("\\s");
+    public Object processCommand(Command command) {
+       // String [] commandParts = command.split("\\s");
 
-        if (commandParts.length>0 && commandDictionary.containsKey(commandParts[0])){
-            return commandDictionary.get(commandParts[0]).processCommand(command);
+        if (commandDictionary.containsKey(command.getCommandName())){
+            return commandDictionary.get(command.getCommandName()).processCommand(command);
         }
-        return "Error command";
+        return null; //"Error command";
     }
 }

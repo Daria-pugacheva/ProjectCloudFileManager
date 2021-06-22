@@ -12,27 +12,31 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import ru.gb.pugacheva.client.factory.Factory;
 import ru.gb.pugacheva.client.service.NetworkService;
+import ru.gb.pugacheva.client.service.impl.NettyNetworkService;
+import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.FileInfo;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Controller implements Initializable {
 
-
     public HBox loginPanel, workPanel;
-    public TextField loginField,clientPathToFile, serverPathToFile;
+    public TextField loginField, clientPathToFile, serverPathToFile;
     public PasswordField passwordField;
     @FXML
-    TableView <FileInfo> clientFiles, serverFiles;
-    public Button download,upload;
+    TableView<FileInfo> clientFiles, serverFiles;
+    public Button download, upload;
 
     private NetworkService networkService;
+
+    private String login = null;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -50,28 +54,28 @@ public class Controller implements Initializable {
     }
 
     private void makeClientTable() {
-        TableColumn <FileInfo,String > clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: упаковать в метод + добавить формирование таблицы в части серверной
+        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: упаковать в метод + добавить формирование таблицы в части серверной
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
         clientFileTypeColumn.setPrefWidth(48);
 
-        TableColumn <FileInfo,String > clientFileNameColumn = new TableColumn<>("Имя файла");
+        TableColumn<FileInfo, String> clientFileNameColumn = new TableColumn<>("Имя файла");
         clientFileNameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileName()));
         clientFileNameColumn.setPrefWidth(240);
 
-        TableColumn <FileInfo,Long > clientFileSizeColumn = new TableColumn<>("Размер файла");
+        TableColumn<FileInfo, Long> clientFileSizeColumn = new TableColumn<>("Размер файла");
         clientFileSizeColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
         clientFileSizeColumn.setPrefWidth(120);
         clientFileSizeColumn.setCellFactory(column -> {
-            return new TableCell<FileInfo,Long>(){
+            return new TableCell<FileInfo, Long>() {
                 @Override
                 protected void updateItem(Long item, boolean empty) {
                     super.updateItem(item, empty);
-                    if(item ==null || empty){
+                    if (item == null || empty) {
                         setText(null);
                         setStyle("");
-                    }else{
-                        String text = String.format("%,d bytes",item);
-                        if(item==-1L){
+                    } else {
+                        String text = String.format("%,d bytes", item);
+                        if (item == -1L) {
                             text = "DIR";
                         }
                         setText(text);
@@ -80,15 +84,15 @@ public class Controller implements Initializable {
             };
         });
 
-        clientFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn,clientFileSizeColumn);
+        clientFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
 
         clientFiles.setOnMouseClicked(new EventHandler<MouseEvent>() { //TODO: вынести отдельным методом(общим со стр.133)
             @Override
             public void handle(MouseEvent event) {
-                if(event.getClickCount() ==2){
+                if (event.getClickCount() == 2) {
                     Path currentPath = Paths.get(clientPathToFile.getText());
                     Path newPath = currentPath.resolve(clientFiles.getSelectionModel().getSelectedItem().getFileName());
-                    if(Files.isDirectory(newPath)){
+                    if (Files.isDirectory(newPath)) {
                         createClientListFiles(newPath);
                     }
                 }
@@ -98,28 +102,28 @@ public class Controller implements Initializable {
     }
 
     private void makeServerTable() {
-        TableColumn <FileInfo,String > clientFileTypeColumn = new TableColumn<>("Тип");
+        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип");
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
         clientFileTypeColumn.setPrefWidth(48);
 
-        TableColumn <FileInfo,String > clientFileNameColumn = new TableColumn<>("Имя файла");
+        TableColumn<FileInfo, String> clientFileNameColumn = new TableColumn<>("Имя файла");
         clientFileNameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileName()));
         clientFileNameColumn.setPrefWidth(240);
 
-        TableColumn <FileInfo,Long > clientFileSizeColumn = new TableColumn<>("Размер файла");
+        TableColumn<FileInfo, Long> clientFileSizeColumn = new TableColumn<>("Размер файла");
         clientFileSizeColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
         clientFileSizeColumn.setPrefWidth(120);
         clientFileSizeColumn.setCellFactory(column -> {
-            return new TableCell<FileInfo,Long>(){
+            return new TableCell<FileInfo, Long>() {
                 @Override
                 protected void updateItem(Long item, boolean empty) {
                     super.updateItem(item, empty);
-                    if(item ==null || empty){
+                    if (item == null || empty) {
                         setText(null);
                         setStyle("");
-                    }else{
-                        String text = String.format("%,d bytes",item);
-                        if(item==-1L){
+                    } else {
+                        String text = String.format("%,d bytes", item);
+                        if (item == -1L) {
                             text = "DIR";
                         }
                         setText(text);
@@ -128,15 +132,15 @@ public class Controller implements Initializable {
             };
         });
 
-        serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn,clientFileSizeColumn);
+        serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
 
         serverFiles.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
-                if(event.getClickCount() ==2){
+                if (event.getClickCount() == 2) {
                     Path currentPath = Paths.get(serverPathToFile.getText());
                     Path newPath = currentPath.resolve(serverFiles.getSelectionModel().getSelectedItem().getFileName());
-                    if(Files.isDirectory(newPath)){
+                    if (Files.isDirectory(newPath)) {
                         createClientListFiles(newPath);
                     }
                 }
@@ -145,11 +149,11 @@ public class Controller implements Initializable {
     }
 
 
-    public void createClientListFiles (Path path){ // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
+    public void createClientListFiles(Path path) { // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
         try {
             clientPathToFile.setText(path.normalize().toAbsolutePath().toString());
             clientFiles.getItems().clear();
-            clientFiles.getItems().addAll(Files.list(path).map(FileInfo :: new).collect(Collectors.toList()));
+            clientFiles.getItems().addAll(Files.list(path).map(FileInfo::new).collect(Collectors.toList()));
             clientFiles.sort();
 
         } catch (IOException e) {
@@ -158,33 +162,59 @@ public class Controller implements Initializable {
         }
     }
 
-    public void createServerListFiles (Path path){ // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
-        try {
-            serverPathToFile.setText(path.normalize().toAbsolutePath().toString());
-            serverFiles.getItems().clear();
-            serverFiles.getItems().addAll(Files.list(path).map(FileInfo :: new).collect(Collectors.toList()));
-            serverFiles.sort();
-        } catch (IOException e) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "Не удалось обновить список файлов", ButtonType.OK);
-            alert.showAndWait();
-        }
+    public void createServerListFiles(List<FileInfo> list) { // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
+        System.out.println("в методе по заполнению окна клиента лист  " + list);
+        serverPathToFile.setText(list.get(0).getPath().toString());
+        serverFiles.getItems().clear();//+
+        serverFiles.getItems().addAll(list);//+
+        serverFiles.sort();//+
     }
 
-    private void createCommandResultHandler(){
+    private void createCommandResultHandler() {
         new Thread(() -> {
 
-            byte [] buffer = new byte [1024];
+            // byte [] buffer = new byte [1024]; / убрать. это было для айт-буффера
             //в этом цикле по-идее происходит авторизация
-            while (true){
-                int bytesFromBuffer = networkService.readCommandResult(buffer); //блокирующая
-                String resultCommand = new String(buffer,0,bytesFromBuffer);
-                if(resultCommand.startsWith("registrationOK") || resultCommand.startsWith("loginOK")) {
-                    Platform.runLater(() -> loginPanel.setVisible(false));
-                    Platform.runLater(() -> workPanel.setVisible(true));
+            while (true) {
+                Object obj = networkService.readCommandResult();
+                if (obj.getClass().equals(String.class)) {
+                    String resultCommand = (String) obj; // каст, потому что знаем, что тут авторизация и будет строка
+//                int bytesFromBuffer = networkService.readCommandResult(buffer); //убрать , был вариант с байт-буффером
+//                String resultCommand = new String(buffer,0,bytesFromBuffer); //убрать , был вариант с байт-буффером
+//  }
+                    if (resultCommand.startsWith("registrationOK") || resultCommand.startsWith("loginOK")) {
+                        login = resultCommand.split("\\s")[1];
+                        Platform.runLater(() -> loginPanel.setVisible(false));
+                        Platform.runLater(() -> workPanel.setVisible(true));
+
+                        String[] args = {login};
+                        networkService.sendCommand(new Command("filesList", args));
+                        break;
+                    } else if (resultCommand.startsWith("registrationFailed")) {
+                        Platform.runLater(() -> createAlert());
+                    }
+                } else if (obj.getClass().equals(List.class)) {
+                    List<FileInfo> resultCommand = (List<FileInfo>) obj;
+                    Platform.runLater(() -> createServerListFiles(resultCommand));
+                    Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
                 }
             }
-            //дальше должен бы идти цикл для работы с хранилищем.
+
+
+            //дальше должен бы идти цикл для работы с хранилищем, но пока, вроде, все в одном цикле происходит
+//            while (true) {
+//                List<FileInfo> resultCommand = (List<FileInfo>) networkService.readCommandResult();
+//                Platform.runLater(() -> createServerListFiles(resultCommand));
+//                Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
+//            }
         }).start();
+    }
+
+    public void createAlert (){
+        Alert choseAnotherLogin = new Alert(Alert.AlertType.WARNING, "Такой логин уже существует" +
+                " с другим паролем. Введите другую пару логин/пароль для регистрации", ButtonType.OK);
+        choseAnotherLogin.showAndWait();
+
     }
 
     public void shutdown() {
@@ -192,7 +222,12 @@ public class Controller implements Initializable {
     }
 
     public void login(ActionEvent actionEvent) {  //отправка на сервер логина и пароля
-        networkService.sendCommand("login " + loginField.getText() + " " + passwordField.getText());
+        String[] textCommand = {"login", loginField.getText(), passwordField.getText()};
+        if (textCommand.length > 2) {
+            String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
+            networkService.sendCommand(new Command(textCommand[0], commandArgs));
+        }
+        // networkService.sendCommand("login " + loginField.getText() + " " + passwordField.getText());
         loginField.clear();
         passwordField.clear();
     }
@@ -201,7 +236,7 @@ public class Controller implements Initializable {
     public void clientMoveUpInFilePath(ActionEvent actionEvent) {
         Path currentPath = Paths.get(clientPathToFile.getText());
         Path upperPath = currentPath.getParent();
-        if(upperPath !=null){
+        if (upperPath != null) {
             createClientListFiles(upperPath);
         }
 

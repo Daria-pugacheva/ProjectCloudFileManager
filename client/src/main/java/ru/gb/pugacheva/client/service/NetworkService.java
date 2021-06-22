@@ -1,10 +1,12 @@
 package ru.gb.pugacheva.client.service;
 
+import ru.gb.pugacheva.common.domain.Command;
+
 public interface NetworkService {
 
-    void sendCommand (String command);
+    void sendCommand (Command command);
 
-    int readCommandResult (byte [] buffer);
+    Object  readCommandResult (); //  в примере с урока тут String
 
     void closeConnection();
 }

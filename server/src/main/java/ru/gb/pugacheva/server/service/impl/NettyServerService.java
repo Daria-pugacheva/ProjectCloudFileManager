@@ -7,9 +7,10 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
-import ru.gb.pugacheva.server.core.CommandHandler;
+import io.netty.handler.codec.serialization.ClassResolvers;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
+import ru.gb.pugacheva.server.core.CommandInboundHandler;
 import ru.gb.pugacheva.server.service.ServerService;
 
 public class NettyServerService implements ServerService {
@@ -30,9 +31,9 @@ public class NettyServerService implements ServerService {
                         @Override
                         protected void initChannel(SocketChannel channel) throws Exception {
                             channel.pipeline()
-                                    .addLast(new StringDecoder()) // переводит из байтв в строки
-                                    .addLast(new StringEncoder()) // переводит строку в байты
-                                    .addLast(new CommandHandler());
+                                    .addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)))
+                                    .addLast(new ObjectEncoder())
+                                    .addLast(new CommandInboundHandler());
 
                         }
                     });

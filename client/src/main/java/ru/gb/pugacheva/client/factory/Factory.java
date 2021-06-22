@@ -6,11 +6,11 @@ import ru.gb.pugacheva.client.service.impl.NettyNetworkService;
 
 public class Factory {
 
-    public static NetworkService getNetworkService(){
-        return IONetworkService.getInstance();
-    }
-
 //    public static NetworkService getNetworkService(){
-//        return new NettyNetworkService();
+//        return IONetworkService.getInstance();
 //    }
+
+    public static NetworkService getNetworkService(){
+        return new NettyNetworkService();
+    }
 }

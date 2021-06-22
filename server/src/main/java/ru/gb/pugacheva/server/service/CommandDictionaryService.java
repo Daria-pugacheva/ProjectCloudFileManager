@@ -1,6 +1,8 @@
 package ru.gb.pugacheva.server.service;
 
+import ru.gb.pugacheva.common.domain.Command;
+
 public interface CommandDictionaryService {
 
-    String processCommand (String command);
+    Object processCommand (Command command);
 }

@@ -1,6 +1,9 @@
 package ru.gb.pugacheva.client.service.impl;
 
+import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
+import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import ru.gb.pugacheva.client.service.NetworkService;
+import ru.gb.pugacheva.common.domain.Command;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -15,8 +18,8 @@ public class IONetworkService implements NetworkService {
     private static IONetworkService instance;
 
     private static Socket socket;
-    private static DataInputStream in;
-    private static DataOutputStream out;
+    private static ObjectDecoderInputStream in;
+    private static ObjectEncoderOutputStream out;
 
 
     private IONetworkService(){}
@@ -33,8 +36,8 @@ public class IONetworkService implements NetworkService {
 
     private static void initializeIOStreams() {
         try {
-            in = new DataInputStream(socket.getInputStream());
-            out = new DataOutputStream(socket.getOutputStream());
+            in = new ObjectDecoderInputStream(socket.getInputStream());
+            out = new ObjectEncoderOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -49,9 +52,9 @@ public class IONetworkService implements NetworkService {
     }
 
     @Override
-    public void sendCommand(String command) {
+    public void sendCommand(Command command) {
         try {
-            out.write(command.getBytes(StandardCharsets.UTF_8));
+            out.writeObject(command);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();
@@ -59,10 +62,10 @@ public class IONetworkService implements NetworkService {
     }
 
     @Override
-    public int readCommandResult(byte [] buffer) {
+    public Object readCommandResult() { //  в примере с урока тут String
         try {
-            return in.read(buffer);
-        } catch (IOException e) {
+            return in.readObject();
+        } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Read command result exception" + e.getMessage());
         }
