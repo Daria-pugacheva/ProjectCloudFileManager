@@ -1,18 +1,15 @@
 package ru.gb.pugacheva.server.core;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
+import io.netty.handler.codec.serialization.ObjectDecoder;
+import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.FileInfo;
 import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.CommandDictionaryService;
 import ru.gb.pugacheva.server.service.impl.ListOfFilesService;
-import ru.gb.pugacheva.server.service.impl.command.ListCreatingCommand;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class CommandInboundHandler extends SimpleChannelInboundHandler <Command> {
@@ -37,9 +34,16 @@ public class CommandInboundHandler extends SimpleChannelInboundHandler <Command>
          // List <FileInfo> result = (List <FileInfo>) dictionaryService.processCommand(command);
 
            System.out.println("пришел запрос на лист файлов"); // убрать. для проверки
-          List <FileInfo> result = listOfFilesService.createServerFilesList(command.getArgs()[0]);
+           List <FileInfo> result = listOfFilesService.createServerFilesList(command.getArgs()[0]);
            System.out.println("На хэндлере лист " + result);
            ctx.writeAndFlush(result);
+       }
+       if(command.getCommandName().startsWith("uploadFile")){ // команда с клиента будет uploadFile имя файла??
+           ctx.pipeline().addLast(new ChunkedWriteHandler());
+           ctx.pipeline().addLast(new FilesInboundHandler());
+           ctx.pipeline().remove(ObjectEncoder.class);
+           ctx.pipeline().remove(ObjectDecoder.class);
+           ctx.pipeline().remove(CommandInboundHandler.class);
        }
     }
 

@@ -7,6 +7,7 @@ import ru.gb.pugacheva.common.domain.Command;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -55,6 +56,15 @@ public class IONetworkService implements NetworkService {
     public void sendCommand(Command command) {
         try {
             out.writeObject(command);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendFile(File file){
+        try {
+            out.writeObject(file);
             out.flush();
         } catch (IOException e) {
             e.printStackTrace();

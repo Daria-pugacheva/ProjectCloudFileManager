@@ -86,12 +86,30 @@ public class Controller implements Initializable {
 
         clientFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
 
-        clientFiles.setOnMouseClicked(new EventHandler<MouseEvent>() { //TODO: вынести отдельным методом(общим со стр.133)
+        moveIntoDirectory(clientFiles,clientPathToFile);
+
+//        clientFiles.setOnMouseClicked(new EventHandler<MouseEvent>() { //TODO: вынести отдельным методом(общим со стр.133)
+//            @Override
+//            public void handle(MouseEvent event) {
+//                if (event.getClickCount() == 2) {
+//                    Path currentPath = Paths.get(clientPathToFile.getText());
+//                    Path newPath = currentPath.resolve(clientFiles.getSelectionModel().getSelectedItem().getFileName());
+//                    if (Files.isDirectory(newPath)) {
+//                        createClientListFiles(newPath);
+//                    }
+//                }
+//
+//            }
+//        });
+    }
+
+    private void moveIntoDirectory (TableView <FileInfo> tableView, TextField textField ){
+        tableView.setOnMouseClicked(new EventHandler<MouseEvent>() { //TODO: вынести отдельным методом(общим со стр.133)
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
-                    Path currentPath = Paths.get(clientPathToFile.getText());
-                    Path newPath = currentPath.resolve(clientFiles.getSelectionModel().getSelectedItem().getFileName());
+                    Path currentPath = Paths.get(textField.getText());
+                    Path newPath = currentPath.resolve(tableView.getSelectionModel().getSelectedItem().getFileName());
                     if (Files.isDirectory(newPath)) {
                         createClientListFiles(newPath);
                     }
@@ -134,18 +152,20 @@ public class Controller implements Initializable {
 
         serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
 
-        serverFiles.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (event.getClickCount() == 2) {
-                    Path currentPath = Paths.get(serverPathToFile.getText());
-                    Path newPath = currentPath.resolve(serverFiles.getSelectionModel().getSelectedItem().getFileName());
-                    if (Files.isDirectory(newPath)) {
-                        createClientListFiles(newPath);
-                    }
-                }
-            }
-        });
+        moveIntoDirectory(serverFiles,serverPathToFile);
+
+//        serverFiles.setOnMouseClicked(new EventHandler<MouseEvent>() {
+//            @Override
+//            public void handle(MouseEvent event) {
+//                if (event.getClickCount() == 2) {
+//                    Path currentPath = Paths.get(serverPathToFile.getText());
+//                    Path newPath = currentPath.resolve(serverFiles.getSelectionModel().getSelectedItem().getFileName());
+//                    if (Files.isDirectory(newPath)) {
+//                        createClientListFiles(newPath);
+//                    }
+//                }
+//            }
+//        });
     }
 
 
@@ -193,7 +213,7 @@ public class Controller implements Initializable {
                     } else if (resultCommand.startsWith("registrationFailed")) {
                         Platform.runLater(() -> createAlert());
                     }
-                } else if (obj.getClass().equals(List.class)) {
+                } else if (obj.getClass().equals(Integer.class)) {
                     List<FileInfo> resultCommand = (List<FileInfo>) obj;
                     Platform.runLater(() -> createServerListFiles(resultCommand));
                     Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
@@ -242,10 +262,18 @@ public class Controller implements Initializable {
 
     }
 
-
-    public void serverMoveUpInFilePath(ActionEvent actionEvent) {
-
-    }
+//  в хранилище будут просто файлы. по папкам не будет движения
+//    public void serverMoveUpInFilePath(ActionEvent actionEvent) {
+//        Path currentPath = Paths.get(serverPathToFile.getText());
+//        if(currentPath.endsWith(login)){
+//            return;
+//        }
+//        Path upperPath = currentPath.getParent();
+//        if (upperPath != null) {
+//            createClientListFiles(upperPath);
+//        }
+//
+//    }
 
     public void download(ActionEvent actionEvent) {
 

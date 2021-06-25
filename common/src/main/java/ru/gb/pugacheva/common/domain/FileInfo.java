@@ -1,12 +1,13 @@
 package ru.gb.pugacheva.common.domain;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileInfo {
+public class FileInfo implements Serializable {
 
-    public enum FileType{
+    public enum FileType implements Serializable{
 
         FILE ("F"), DIRECTORY ("D");
 
@@ -75,5 +76,15 @@ public class FileInfo {
         } catch (IOException e) {
             throw new RuntimeException("Не удалось собрать информацию о файле по пути " + path);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "FileInfo{" +
+                "fileName='" + fileName + '\'' +
+                ", fileType=" + fileType +
+                ", size=" + size +
+                ", path=" + path +
+                '}';
     }
 }
