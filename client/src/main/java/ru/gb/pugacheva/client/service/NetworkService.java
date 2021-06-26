@@ -9,4 +9,6 @@ public interface NetworkService {
     Object  readCommandResult (); //  в примере с урока тут String
 
     void closeConnection();
+
+    boolean isConnected();
 }

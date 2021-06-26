@@ -12,7 +12,7 @@ import java.io.Serializable;
 public class Command implements Serializable {
 
     private String commandName;
-    private String [] args;
+    private Object [] args;
 
 //    public String getCommandName() {
 //        return commandName;

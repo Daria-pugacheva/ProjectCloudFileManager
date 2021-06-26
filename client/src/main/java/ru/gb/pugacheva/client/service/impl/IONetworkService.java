@@ -82,6 +82,11 @@ public class IONetworkService implements NetworkService {
     }
 
     @Override
+    public boolean isConnected() {
+        return instance!=null;  // наверное, так??
+    }
+
+    @Override
     public void closeConnection() {
         try {
             in.close();

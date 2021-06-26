@@ -15,7 +15,7 @@ public class ViewFilesInDirCommand  implements CommandService <String>{ // TODO:
             throw new IllegalArgumentException("Command " + getCommand() + "is not correct");
 
         }
-        return process(command.getArgs()[0]);
+        return process((String) command.getArgs()[0]);
     }
 
     private String process (String dirPath){

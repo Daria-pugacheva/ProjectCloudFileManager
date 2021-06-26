@@ -18,10 +18,9 @@ public class AuthenticationCommand implements CommandService <String> {
         //if(actualCommandParts.length !=requirementCountCommandParts){
             if(command.getArgs().length != requirementCountCommandArgs){
             throw new IllegalArgumentException("Command " + getCommand() + " is not correct");
-
         }
         //return process(actualCommandParts[1],actualCommandParts[2]);
-        return process(command.getArgs()[0],command.getArgs()[1]);
+        return process((String) command.getArgs()[0],(String) command.getArgs()[1]);
     }
 
 
@@ -34,10 +33,10 @@ public class AuthenticationCommand implements CommandService <String> {
             String pathToDir = String.format("C:/java/Course_Project_Cloud/my-cloud-project/Cloud/%s/",login);
             File file = new File(pathToDir);
             file.mkdir();
-            return "registrationOK " + login; // пока логин ту тне нужен (убрать)
+            return "loginOK " + login; // был вариант с registrationOK, но я упростила
         }
         authenticationService.close();
-        return "registrationFailed";
+        return "registrationFailed " + login;
     }
 
     @Override

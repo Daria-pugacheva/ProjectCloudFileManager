@@ -33,7 +33,7 @@ public class ListCreatingCommand implements CommandService<List<FileInfo>> {
             throw new IllegalArgumentException("Command " + getCommand() + "is not correct");
 
         }
-        return process(command.getArgs()[0]);
+        return process((String) command.getArgs()[0]);
     }
 
     private List<FileInfo> process(String login) {

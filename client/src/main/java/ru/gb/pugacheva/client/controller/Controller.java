@@ -38,18 +38,36 @@ public class Controller implements Initializable {
 
     private String login = null;
 
+    public NetworkService getNetworkService() {
+        return networkService;
+    }
+
+    public void setNetworkService(NetworkService networkService) {
+        this.networkService = networkService;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         workPanel.setVisible(false);
 
-        networkService = Factory.getNetworkService(); //TODO: возможно, момент подключения лучше перенести на кнопку регистрации?
+       // networkService = Factory.getNetworkService(); // мой вариантTODO: возможно, момент подключения лучше перенести на кнопку регистрации?
+
+        networkService = Factory.initializeNetworkService(); // DEN
 
         makeClientTable();
         makeServerTable();
 
         createClientListFiles(Paths.get("C:/"));  // выводим изначально систему от диска С. МОЖЕТ, перенести на авторизацию
 
-        createCommandResultHandler();
+        //createCommandResultHandler(); пока уберем
 
     }
 
@@ -182,58 +200,59 @@ public class Controller implements Initializable {
         }
     }
 
-    public void createServerListFiles(List<FileInfo> list) { // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
+    public void createServerListFiles(String path, List<FileInfo> list) { // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
         System.out.println("в методе по заполнению окна клиента лист  " + list);
-        serverPathToFile.setText(list.get(0).getPath().toString());
+        serverPathToFile.clear();
+        serverPathToFile.setText(path);
         serverFiles.getItems().clear();//+
         serverFiles.getItems().addAll(list);//+
         serverFiles.sort();//+
     }
 
-    private void createCommandResultHandler() {
-        new Thread(() -> {
-
-            // byte [] buffer = new byte [1024]; / убрать. это было для айт-буффера
-            //в этом цикле по-идее происходит авторизация
-            while (true) {
-                Object obj = networkService.readCommandResult();
-                if (obj.getClass().equals(String.class)) {
-                    String resultCommand = (String) obj; // каст, потому что знаем, что тут авторизация и будет строка
-//                int bytesFromBuffer = networkService.readCommandResult(buffer); //убрать , был вариант с байт-буффером
-//                String resultCommand = new String(buffer,0,bytesFromBuffer); //убрать , был вариант с байт-буффером
-//  }
-                    if (resultCommand.startsWith("registrationOK") || resultCommand.startsWith("loginOK")) {
-                        login = resultCommand.split("\\s")[1];
-                        Platform.runLater(() -> loginPanel.setVisible(false));
-                        Platform.runLater(() -> workPanel.setVisible(true));
-
-                        String[] args = {login};
-                        networkService.sendCommand(new Command("filesList", args));
-                        break;
-                    } else if (resultCommand.startsWith("registrationFailed")) {
-                        Platform.runLater(() -> createAlert());
-                    }
-                } else if (obj.getClass().equals(Integer.class)) {
-                    List<FileInfo> resultCommand = (List<FileInfo>) obj;
-                    Platform.runLater(() -> createServerListFiles(resultCommand));
-                    Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
-                }
-            }
-
-
-            //дальше должен бы идти цикл для работы с хранилищем, но пока, вроде, все в одном цикле происходит
+//    private void createCommandResultHandler() {
+//        new Thread(() -> {
+//
+//            // byte [] buffer = new byte [1024]; / убрать. это было для айт-буффера
+//            //в этом цикле по-идее происходит авторизация
 //            while (true) {
-//                List<FileInfo> resultCommand = (List<FileInfo>) networkService.readCommandResult();
-//                Platform.runLater(() -> createServerListFiles(resultCommand));
-//                Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
+//                Object obj = networkService.readCommandResult();
+//                if (obj.getClass().equals(String.class)) {
+//                    String resultCommand = (String) obj; // каст, потому что знаем, что тут авторизация и будет строка
+////                int bytesFromBuffer = networkService.readCommandResult(buffer); //убрать , был вариант с байт-буффером
+////                String resultCommand = new String(buffer,0,bytesFromBuffer); //убрать , был вариант с байт-буффером
+////  }
+//                    if (resultCommand.startsWith("registrationOK") || resultCommand.startsWith("loginOK")) {
+//                        login = resultCommand.split("\\s")[1];
+//                        Platform.runLater(() -> loginPanel.setVisible(false));
+//                        Platform.runLater(() -> workPanel.setVisible(true));
+//
+//                        String[] args = {login};
+//                        networkService.sendCommand(new Command("filesList", args));
+//                        break;
+//                    } else if (resultCommand.startsWith("registrationFailed")) {
+//                        Platform.runLater(() -> createAlert("Такой логин уже существует" +
+//                                " с другим паролем. Введите другую пару логин/пароль для регистрации"));
+//                    }
+//                } else if (obj.getClass().equals(Integer.class)) {
+//                    List<FileInfo> resultCommand = (List<FileInfo>) obj;
+//                    Platform.runLater(() -> createServerListFiles(resultCommand));
+//                    Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
+//                }
 //            }
-        }).start();
-    }
+//
+//
+//            //дальше должен бы идти цикл для работы с хранилищем, но пока, вроде, все в одном цикле происходит
+////            while (true) {
+////                List<FileInfo> resultCommand = (List<FileInfo>) networkService.readCommandResult();
+////                Platform.runLater(() -> createServerListFiles(resultCommand));
+////                Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
+////            }
+//        }).start();
+//    }
 
-    public void createAlert (){
-        Alert choseAnotherLogin = new Alert(Alert.AlertType.WARNING, "Такой логин уже существует" +
-                " с другим паролем. Введите другую пару логин/пароль для регистрации", ButtonType.OK);
-        choseAnotherLogin.showAndWait();
+    public void createAlert (String text){
+        Alert alert = new Alert(Alert.AlertType.WARNING, text, ButtonType.OK);
+        alert.showAndWait();
 
     }
 
@@ -242,10 +261,15 @@ public class Controller implements Initializable {
     }
 
     public void login(ActionEvent actionEvent) {  //отправка на сервер логина и пароля
+        if (!networkService.isConnected()) {
+            networkService = Factory.initializeNetworkService();
+        }
         String[] textCommand = {"login", loginField.getText(), passwordField.getText()};
         if (textCommand.length > 2) {
             String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
             networkService.sendCommand(new Command(textCommand[0], commandArgs));
+        }else{
+            createAlert("Не все поля для регистрации заполнены: введите логин и пароль");
         }
         // networkService.sendCommand("login " + loginField.getText() + " " + passwordField.getText());
         loginField.clear();
@@ -263,17 +287,17 @@ public class Controller implements Initializable {
     }
 
 //  в хранилище будут просто файлы. по папкам не будет движения
-//    public void serverMoveUpInFilePath(ActionEvent actionEvent) {
-//        Path currentPath = Paths.get(serverPathToFile.getText());
-//        if(currentPath.endsWith(login)){
-//            return;
-//        }
-//        Path upperPath = currentPath.getParent();
-//        if (upperPath != null) {
-//            createClientListFiles(upperPath);
-//        }
-//
-//    }
+    public void serverMoveUpInFilePath(ActionEvent actionEvent) {
+        Path currentPath = Paths.get(serverPathToFile.getText());
+        if(currentPath.endsWith(login)){
+            return;
+        }
+        Path upperPath = currentPath.getParent();
+        if (upperPath != null) {
+            createClientListFiles(upperPath);
+        }
+
+    }
 
     public void download(ActionEvent actionEvent) {
 

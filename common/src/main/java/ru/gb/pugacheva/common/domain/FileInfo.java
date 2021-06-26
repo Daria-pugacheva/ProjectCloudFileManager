@@ -27,7 +27,7 @@ public class FileInfo implements Serializable {
     private FileType fileType;
 
     private long size;
-    private Path path;
+    private String path;
 
     //РАСШИРЕНИЕ ЕЩЕ МОЖНО ДОБАВИТЬ.
 
@@ -56,17 +56,17 @@ public class FileInfo implements Serializable {
         this.size = size;
     }
 
-    public Path getPath() {
+    public String getPath() {
         return path;
     }
 
-    public void setPath(Path path) {
+    public void setPath(String path) {
         this.path = path;
     }
 
     public FileInfo(Path path) {
         try {
-            this.path = path;
+            this.path = path.toString();
             this.fileName=path.getFileName().toString();
             this.size = Files.size(path);
             this.fileType = Files.isDirectory(path) ? FileType.DIRECTORY : FileType.FILE;
