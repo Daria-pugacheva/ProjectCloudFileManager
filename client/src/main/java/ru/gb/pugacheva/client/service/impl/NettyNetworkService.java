@@ -8,9 +8,13 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.stream.ChunkedFile;
 import ru.gb.pugacheva.client.core.ClientCommandHandler;
 import ru.gb.pugacheva.client.service.NetworkService;
 import ru.gb.pugacheva.common.domain.Command;
+
+import java.io.File;
+import java.io.IOException;
 
 public class NettyNetworkService implements NetworkService {  // ПОКА НЕПРИМЕНЯЕМЫЙ КОД (ПОКА ИСПОЛЬЗУЮ ВАРИАНТ IO)
 
@@ -19,6 +23,11 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
 
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 8189;
+
+//   // @Override
+//    public static SocketChannel getChannel() {
+//        return channel;
+//    }
 
     private NettyNetworkService() { // DEN
     }
@@ -68,6 +77,18 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
     public void sendCommand(Command command) {
         System.out.println("command from client is " + command.getCommandName()); //для проверки
         channel.writeAndFlush(command);
+    }
+    
+    @Override
+    public void sendFile(String pathToFile){
+        try {
+            ChannelFuture future = channel.writeAndFlush(new ChunkedFile(new File(pathToFile)));
+            System.out.println("8. Должна стартовать передача файла " + pathToFile);
+            future.addListener((ChannelFutureListener) channelFuture -> System.out.println(" 9. Файл передан")); //может, еще куда передадим?
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override

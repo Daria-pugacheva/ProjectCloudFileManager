@@ -1,6 +1,10 @@
 package ru.gb.pugacheva.client.service;
 
+import io.netty.channel.socket.SocketChannel;
 import ru.gb.pugacheva.common.domain.Command;
+
+import java.io.File;
+import java.net.Socket;
 
 public interface NetworkService {
 
@@ -11,4 +15,8 @@ public interface NetworkService {
     void closeConnection();
 
     boolean isConnected();
+
+    void sendFile (String pathToFile);
+
+   // SocketChannel getChannel();
 }

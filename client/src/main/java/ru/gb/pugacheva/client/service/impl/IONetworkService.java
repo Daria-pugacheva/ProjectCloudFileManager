@@ -1,5 +1,6 @@
 package ru.gb.pugacheva.client.service.impl;
 
+import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import ru.gb.pugacheva.client.service.NetworkService;
@@ -85,6 +86,16 @@ public class IONetworkService implements NetworkService {
     public boolean isConnected() {
         return instance!=null;  // наверное, так??
     }
+
+    @Override
+    public void sendFile(String pathToFile) {
+        // заглушка
+    }
+//
+//    @Override
+//    public SocketChannel getChannel() { // заглушка
+//        return null;
+//    }
 
     @Override
     public void closeConnection() {

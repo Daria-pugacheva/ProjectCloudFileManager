@@ -32,7 +32,7 @@ public class Controller implements Initializable {
     public PasswordField passwordField;
     @FXML
     TableView<FileInfo> clientFiles, serverFiles;
-    public Button download, upload;
+    public Button downloadButton, uploadButton;
 
     private NetworkService networkService;
 
@@ -170,22 +170,9 @@ public class Controller implements Initializable {
 
         serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
 
-        moveIntoDirectory(serverFiles,serverPathToFile);
+        moveIntoDirectory(serverFiles,serverPathToFile); // возможно, не надо. Смотреть
 
-//        serverFiles.setOnMouseClicked(new EventHandler<MouseEvent>() {
-//            @Override
-//            public void handle(MouseEvent event) {
-//                if (event.getClickCount() == 2) {
-//                    Path currentPath = Paths.get(serverPathToFile.getText());
-//                    Path newPath = currentPath.resolve(serverFiles.getSelectionModel().getSelectedItem().getFileName());
-//                    if (Files.isDirectory(newPath)) {
-//                        createClientListFiles(newPath);
-//                    }
-//                }
-//            }
-//        });
     }
-
 
     public void createClientListFiles(Path path) { // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
         try {
@@ -209,7 +196,78 @@ public class Controller implements Initializable {
         serverFiles.sort();//+
     }
 
-//    private void createCommandResultHandler() {
+    public void clientMoveUpInFilePath(ActionEvent actionEvent) {
+        Path currentPath = Paths.get(clientPathToFile.getText());
+        Path upperPath = currentPath.getParent();
+        if (upperPath != null) {
+            createClientListFiles(upperPath);
+        }
+    }
+
+    public void createAlert (String text){
+        Alert alert = new Alert(Alert.AlertType.WARNING, text, ButtonType.OK);
+        alert.showAndWait();
+
+    }
+
+    public void shutdown() {
+        networkService.closeConnection();
+    }
+
+    public void login(ActionEvent actionEvent) {  //отправка на сервер логина и пароля
+        if (!networkService.isConnected()) {
+            networkService = Factory.initializeNetworkService();
+        }
+        String[] textCommand = {"login", loginField.getText(), passwordField.getText()};
+        if (textCommand.length > 2) {
+            String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
+            networkService.sendCommand(new Command(textCommand[0], commandArgs));
+        }else{
+            createAlert("Не все поля для регистрации заполнены: введите логин и пароль");
+        }
+        // networkService.sendCommand("login " + loginField.getText() + " " + passwordField.getText());
+        loginField.clear();
+        passwordField.clear();
+    }
+
+
+
+    public void download(ActionEvent actionEvent) {
+        if (!networkService.isConnected()) {
+            networkService = Factory.initializeNetworkService();
+        }
+
+    }
+
+    public void upload(ActionEvent actionEvent) {
+        uploadButton.setDisable(true); //TODO: ДОДЕЛАТЬ, ЧТОБЫ БЛОКИРОВКА КНОПОК СНИМАЛАСЬ, ЕСЛИ ПРОБЛЕМА С ФАЙЛОМ.
+        downloadButton.setDisable(true);
+        if (!networkService.isConnected()) {
+            networkService = Factory.initializeNetworkService();
+        }
+        String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) + getSelectedFilename(clientFiles); //TODO: смотреть, почему файл не находится, когда проваливаюсь в папки.
+        Long fileSize = clientFiles.getSelectionModel().getSelectedItem().getSize();
+        Object [] commandArgs = {getSelectedFilename(clientFiles), absolutePathOfUploadFile,login,fileSize};
+        Command command = new Command("upload",commandArgs);
+        networkService.sendCommand(command); // на сервер upload + имя файла
+        System.out.println("1.Нажали на кнопку и из хэндлера отправли команду upload" + getSelectedFilename(clientFiles)+ absolutePathOfUploadFile+login);
+    }
+
+    public String getSelectedFilename (TableView <FileInfo> tableView){ // указываем, с какой панелью имеем дело
+        if (!tableView.isFocused()){
+            return null;
+        }
+        return tableView.getSelectionModel().getSelectedItem().getFileName();
+    }
+
+    public String getcurrentPath (TextField textField){
+        return textField.getText();
+    }
+
+
+//clientFiles.getSelectionModel().getSelectedItem().getFileName(); - последовательность для поиска имени файла
+
+ //   private void createCommandResultHandler() {
 //        new Thread(() -> {
 //
 //            // byte [] buffer = new byte [1024]; / убрать. это было для айт-буффера
@@ -250,43 +308,7 @@ public class Controller implements Initializable {
 //        }).start();
 //    }
 
-    public void createAlert (String text){
-        Alert alert = new Alert(Alert.AlertType.WARNING, text, ButtonType.OK);
-        alert.showAndWait();
-
-    }
-
-    public void shutdown() {
-        networkService.closeConnection();
-    }
-
-    public void login(ActionEvent actionEvent) {  //отправка на сервер логина и пароля
-        if (!networkService.isConnected()) {
-            networkService = Factory.initializeNetworkService();
-        }
-        String[] textCommand = {"login", loginField.getText(), passwordField.getText()};
-        if (textCommand.length > 2) {
-            String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
-            networkService.sendCommand(new Command(textCommand[0], commandArgs));
-        }else{
-            createAlert("Не все поля для регистрации заполнены: введите логин и пароль");
-        }
-        // networkService.sendCommand("login " + loginField.getText() + " " + passwordField.getText());
-        loginField.clear();
-        passwordField.clear();
-    }
-
-
-    public void clientMoveUpInFilePath(ActionEvent actionEvent) {
-        Path currentPath = Paths.get(clientPathToFile.getText());
-        Path upperPath = currentPath.getParent();
-        if (upperPath != null) {
-            createClientListFiles(upperPath);
-        }
-
-    }
-
-//  в хранилище будут просто файлы. по папкам не будет движения
+    //  в хранилище будут просто файлы. по папкам не будет движения - убрать этот метод и кнопку из fxml
     public void serverMoveUpInFilePath(ActionEvent actionEvent) {
         Path currentPath = Paths.get(serverPathToFile.getText());
         if(currentPath.endsWith(login)){
@@ -296,16 +318,9 @@ public class Controller implements Initializable {
         if (upperPath != null) {
             createClientListFiles(upperPath);
         }
-
     }
 
-    public void download(ActionEvent actionEvent) {
 
-    }
 
-    public void upload(ActionEvent actionEvent) {
 
-    }
 }
-
-//clientFiles.getSelectionModel().getSelectedItem().getFileName(); - последовательность для поиска имени файла

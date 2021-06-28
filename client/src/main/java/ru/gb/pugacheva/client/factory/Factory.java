@@ -8,6 +8,7 @@ import ru.gb.pugacheva.client.service.impl.NettyNetworkService;
 import ru.gb.pugacheva.client.service.impl.command.AcceptedLoginCommand;
 import ru.gb.pugacheva.client.service.impl.command.CloudFilesListCommand;
 import ru.gb.pugacheva.client.service.impl.command.FailedLoginCommand;
+import ru.gb.pugacheva.client.service.impl.command.UploadFileCommand;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +37,8 @@ public class Factory {
 
 
     public static List<CommandService> getCommandServices() {
-        return Arrays.asList(new AcceptedLoginCommand(), new FailedLoginCommand(), new CloudFilesListCommand()); // команды добавлять
+        return Arrays.asList(new AcceptedLoginCommand(), new FailedLoginCommand(),
+                new CloudFilesListCommand(), new UploadFileCommand()); // команды добавлять
     }
 
      //TODO для клиента добавить сюда создание словаря команд по аналогии с сервером

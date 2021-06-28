@@ -10,6 +10,8 @@ import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.CommandDictionaryService;
 import ru.gb.pugacheva.server.service.impl.ListOfFilesService;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,6 +19,7 @@ public class CommandInboundHandler extends SimpleChannelInboundHandler <Command>
 
     CommandDictionaryService dictionaryService;
     ListOfFilesService listOfFilesService;
+    private final Path currentPath = Paths.get("C:\\java\\Course_Project_Cloud\\my-cloud-project\\Cloud");
 
     public CommandInboundHandler() {
 
@@ -48,13 +51,27 @@ public class CommandInboundHandler extends SimpleChannelInboundHandler <Command>
            Command result = new Command("cloudFilesList",args);
            ctx.writeAndFlush(result);
        }
-       if(command.getCommandName().startsWith("uploadFile")){ // команда с клиента будет uploadFile имя файла??
+       if(command.getCommandName().startsWith("upload")){ // команда с клиента будет uploadFile имя файла??
+           System.out.println("2. Сервером на хэндлере получена команда upload" + Arrays.asList(command.getArgs()));
            ctx.pipeline().addLast(new ChunkedWriteHandler());
            ctx.pipeline().addLast(new FilesInboundHandler());
-           ctx.pipeline().remove(ObjectEncoder.class);
+           FilesInboundHandler.setFileName((String) command.getArgs()[0]);
+           Path userDirectory = currentPath.resolve((String) command.getArgs()[2]);
+           FilesInboundHandler.setUserDirectory(userDirectory.toString() +"\\");
+           FilesInboundHandler.setFileSize((Long)command.getArgs()[3]);
+           FilesInboundHandler.setUserLogin((String) command.getArgs()[2]);
            ctx.pipeline().remove(ObjectDecoder.class);
            ctx.pipeline().remove(CommandInboundHandler.class);
+           System.out.println("3.После смены хэндлеров на сервере они выстроились в последовательность" + ctx.pipeline().toString());
+           ctx.writeAndFlush(new Command("readyToUpload", command.getArgs()));
+           System.out.println("4.C сервера по идее, отправлена команда readyToUpload" + Arrays.asList(command.getArgs()));
+          // ctx.pipeline().remove(ObjectEncoder.class);
        }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
+        cause.printStackTrace(); // потом заменить на логер
     }
 
 
