@@ -62,7 +62,7 @@ public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object chunkedFile) throws Exception {
         ByteBuf byteBuf = (ByteBuf) chunkedFile;
-        String absoluteFileNameForCloud = userDirectory + fileName;
+        String absoluteFileNameForCloud = userDirectory + "\\" +fileName;
         File newfile = new File(absoluteFileNameForCloud); //TODO: доделать какой-то алерт/excwption, если файл существует
         newfile.createNewFile();
         System.out.println("10. Должен быть создан файл и Запущен прием фала а сервере по пути " + absoluteFileNameForCloud);
@@ -79,16 +79,6 @@ public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
                 ctx.pipeline().remove(ChunkedWriteHandler.class);
                 String [] args = {fileName};
                 ctx.writeAndFlush(new Command("UploadFinished", args));
-//                //блок кода по отправке оновленого листа с файлами на клиент - оптимизировать надо. Такой же на CommandInboundHandlere
-//                List<FileInfo> resultListOfFiles = listOfFilesService.createServerFilesList(userLogin);
-//                System.out.println("На хэндлере лист " + resultListOfFiles);
-//                String pathToClientDirectory = userLogin + ":\\";
-//                Object [] fileListArgs = new Object[2];
-//                fileListArgs[0] = pathToClientDirectory;
-//                fileListArgs[1] = resultListOfFiles;
-//                Command resultToupgradeFilesList = new Command("cloudFilesList",args);
-//                ctx.writeAndFlush(resultToupgradeFilesList);
-//                //блок по отрпавке листа файлов закончился
                 System.out.println("12. На клиент с сервера отправлена команда UploadFinished");
                 ctx.pipeline().addFirst(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
                 ctx.pipeline().addLast(new CommandInboundHandler());

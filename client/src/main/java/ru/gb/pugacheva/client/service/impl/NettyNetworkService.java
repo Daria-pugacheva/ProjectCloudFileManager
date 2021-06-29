@@ -15,6 +15,7 @@ import ru.gb.pugacheva.common.domain.Command;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class NettyNetworkService implements NetworkService {  // ПОКА НЕПРИМЕНЯЕМЫЙ КОД (ПОКА ИСПОЛЬЗУЮ ВАРИАНТ IO)
 
@@ -75,7 +76,7 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
 
     @Override
     public void sendCommand(Command command) {
-        System.out.println("command from client is " + command.getCommandName()); //для проверки
+        System.out.println("command from client is " + command.getCommandName() + Arrays.asList(command.getArgs())); //для проверки
         channel.writeAndFlush(command);
     }
     

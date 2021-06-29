@@ -65,7 +65,7 @@ public class Controller implements Initializable {
         makeClientTable();
         makeServerTable();
 
-        createClientListFiles(Paths.get("C:/"));  // выводим изначально систему от диска С. МОЖЕТ, перенести на авторизацию
+        createClientListFiles(Paths.get("C:/Файловая система клиента/"));  // выводим изначально систему от диска С. МОЖЕТ, перенести на авторизацию
 
         //createCommandResultHandler(); пока уберем
 
@@ -233,10 +233,16 @@ public class Controller implements Initializable {
 
 
     public void download(ActionEvent actionEvent) {
+        uploadButton.setDisable(true); //TODO: ДОДЕЛАТЬ, ЧТОБЫ БЛОКИРОВКА КНОПОК СНИМАЛАСЬ, ЕСЛИ ПРОБЛЕМА С ФАЙЛОМ.
+        downloadButton.setDisable(true);
         if (!networkService.isConnected()) {
             networkService = Factory.initializeNetworkService();
         }
-
+        Long fileSize = serverFiles.getSelectionModel().getSelectedItem().getSize();
+        Object [] commandArgs = {getSelectedFilename(serverFiles), login, fileSize};
+        Command command = new Command("download", commandArgs);
+        networkService.sendCommand(command); // на сервер download + имя файла + логин и размер
+        System.out.println("1.Нажали на кнопку и из хэндлера отправли команду download" + Arrays.asList(commandArgs));
     }
 
     public void upload(ActionEvent actionEvent) {
@@ -245,7 +251,7 @@ public class Controller implements Initializable {
         if (!networkService.isConnected()) {
             networkService = Factory.initializeNetworkService();
         }
-        String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) + getSelectedFilename(clientFiles); //TODO: смотреть, почему файл не находится, когда проваливаюсь в папки.
+        String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) +"\\"+ getSelectedFilename(clientFiles); //TODO: смотреть, почему файл не находится, когда проваливаюсь в папки.
         Long fileSize = clientFiles.getSelectionModel().getSelectedItem().getSize();
         Object [] commandArgs = {getSelectedFilename(clientFiles), absolutePathOfUploadFile,login,fileSize};
         Command command = new Command("upload",commandArgs);

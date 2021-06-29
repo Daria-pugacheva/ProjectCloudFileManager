@@ -24,14 +24,10 @@ public class ClientCommandHandler extends SimpleChannelInboundHandler<Command> {
         if(command.getCommandName().startsWith("readyToUpload")){
             System.out.println("5.На клиенте получена команда readyToUpload" + Arrays.asList(command.getArgs()));
             ctx.pipeline().addLast(new ChunkedWriteHandler());
-           // ctx.pipeline().remove(ObjectDecoder.class);
             ctx.pipeline().remove(ObjectEncoder.class);
-           // ctx.pipeline().remove(ClientCommandHandler.class);
             System.out.println("6. Пайплайна на клиенте после смены " + ctx.pipeline().toString());
             CommandDictionaryService commandDictionary = Factory.getCommandDictionary();
             commandDictionary.processCommand(command);
-
-
         }else if(command.getCommandName().startsWith("UploadFinished")){
             System.out.println("13 или 14 Получена с сервера команда UploadFinished для файла " + Arrays.asList(command.getArgs()));
             ctx.pipeline().remove(ChunkedWriteHandler.class);
@@ -44,7 +40,22 @@ public class ClientCommandHandler extends SimpleChannelInboundHandler<Command> {
             currentController.getNetworkService().sendCommand(new Command("filesList", args));
             currentController.uploadButton.setDisable(false);
             currentController.downloadButton.setDisable(false);
-        } else { // TODO: может, убрать этот блок (посмотреть работоспособность)
+        } else if(command.getCommandName().startsWith("readyToDownload")){
+            System.out.println("5.На клиенте получена команда readyToDownload" + Arrays.asList(command.getArgs()));
+            FilesInboundClientHandler.setFileName((String) command.getArgs()[0]);
+            FilesInboundClientHandler.setFileSize((Long) command.getArgs()[2]);
+            Controller currentController = (Controller) MainClientApp.getActiveController();
+            String userDirectoryForDounload  = currentController.clientPathToFile.getText();
+            FilesInboundClientHandler.setUserDirectory(userDirectoryForDounload);
+            ctx.pipeline().remove(ClientCommandHandler.class);
+            ctx.pipeline().remove(ObjectDecoder.class);
+            ctx.pipeline().addLast(new ChunkedWriteHandler());
+            ctx.pipeline().addLast(new FilesInboundClientHandler());
+            System.out.println("6. Пайплайна на клиенте после смены " + ctx.pipeline().toString());
+            Object [] argsToServer = {command.getArgs()[0],command.getArgs()[1]};
+            ctx.writeAndFlush(new Command("readyToRecieve",argsToServer));
+            System.out.println("7. На сервер отправлена каманда readyToRecieve " + Arrays.asList(argsToServer));
+        } else {
             CommandDictionaryService commandDictionary = Factory.getCommandDictionary();
             commandDictionary.processCommand(command);
         }
