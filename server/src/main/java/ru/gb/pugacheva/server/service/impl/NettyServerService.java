@@ -19,17 +19,17 @@ public class NettyServerService implements ServerService {
 
     @Override
     public void startServer() {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1); //поток для подключения клиентов
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
             ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(bossGroup,workerGroup)
+            bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
 
                         @Override
-                        protected void initChannel(SocketChannel channel) throws Exception {
+                        protected void initChannel(SocketChannel channel) {
                             channel.pipeline()
                                     .addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)))
                                     .addLast(new ObjectEncoder())
@@ -38,15 +38,16 @@ public class NettyServerService implements ServerService {
                         }
                     });
 
-            ChannelFuture future =  bootstrap.bind(SERVER_PORT).sync(); // фактический запуск свервера
+            ChannelFuture future = bootstrap.bind(SERVER_PORT).sync();
             System.out.println("Сервер запущен");
-            future.channel().closeFuture().sync(); // здесь ждем, пока свервер еще работает (чтобы не отваливаться)
+            future.channel().closeFuture().sync();
 
-        }catch (Exception e){
+        } catch (Exception e) {
             System.out.println("Сервер упал");
-        }finally {
+        } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
         }
     }
+
 }

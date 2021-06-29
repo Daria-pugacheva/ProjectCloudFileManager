@@ -9,7 +9,8 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.stream.ChunkedFile;
-import ru.gb.pugacheva.client.core.ClientCommandHandler;
+
+import ru.gb.pugacheva.client.core.ClientInboundCommandHandler;
 import ru.gb.pugacheva.client.service.NetworkService;
 import ru.gb.pugacheva.common.domain.Command;
 
@@ -17,23 +18,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class NettyNetworkService implements NetworkService {  // ПОКА НЕПРИМЕНЯЕМЫЙ КОД (ПОКА ИСПОЛЬЗУЮ ВАРИАНТ IO)
+public class NettyNetworkService implements NetworkService {
 
-    private static SocketChannel channel;//TODO: для закрытия надо закрыть канал (см.ниже)
-    private static NettyNetworkService network; // ОТ ДЕНИСА
+    private static SocketChannel channel;
+    private static NettyNetworkService network;
 
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 8189;
 
-//   // @Override
-//    public static SocketChannel getChannel() {
-//        return channel;
-//    }
-
-    private NettyNetworkService() { // DEN
+    private NettyNetworkService() {
     }
 
-    public static NettyNetworkService initializeNetwork() { //DEN
+    public static NettyNetworkService initializeNetwork() {
         network = new NettyNetworkService();
         initializeNetworkService();
         return network;
@@ -43,10 +39,8 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
         return network;
     }
 
-    //public NettyNetworkService(){ // MY
     private static void initializeNetworkService() {
-        //new Thread(()->{ //MY
-        Thread t = new Thread(() -> { //DEN
+        Thread t = new Thread(() -> {
             EventLoopGroup workGroup = new NioEventLoopGroup();
             try {
                 Bootstrap bootstrap = new Bootstrap();
@@ -54,55 +48,46 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
                         .channel(NioSocketChannel.class)
                         .handler(new ChannelInitializer<SocketChannel>() {
                             @Override
-                            protected void initChannel(SocketChannel socketChannel) throws Exception {
+                            protected void initChannel(SocketChannel socketChannel) {
                                 channel = socketChannel;
                                 socketChannel.pipeline()
-                                        .addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null))) //добавили входящий и исходящий хэндлер
+                                        .addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)))
                                         .addLast(new ObjectEncoder())
-                                        .addLast(new ClientCommandHandler()); //DEN
+                                        .addLast(new ClientInboundCommandHandler());
                             }
                         });
                 ChannelFuture future = bootstrap.connect(SERVER_HOST, SERVER_PORT).sync();
-                future.channel().closeFuture().sync(); // блокирующая операция //TODO: для закрытия надо закрыть канал (см.выше)
+                future.channel().closeFuture().sync();
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 workGroup.shutdownGracefully();
             }
-        }); // у меня был start тут
+        });
         t.setDaemon(true);
         t.start();
     }
 
     @Override
     public void sendCommand(Command command) {
-        System.out.println("command from client is " + command.getCommandName() + Arrays.asList(command.getArgs())); //для проверки
+        System.out.println("command from client is " + command.getCommandName() + Arrays.asList(command.getArgs()));
         channel.writeAndFlush(command);
     }
-    
+
     @Override
-    public void sendFile(String pathToFile){
+    public void sendFile(String pathToFile) {
         try {
-            ChannelFuture future = channel.writeAndFlush(new ChunkedFile(new File(pathToFile)));
+            ChannelFuture future = channel.writeAndFlush(new ChunkedFile(new File(pathToFile))); //TODO: прикинуть, нужен ли листнер (пока удобно для проверки)
             System.out.println("8. Должна стартовать передача файла " + pathToFile);
-            future.addListener((ChannelFutureListener) channelFuture -> System.out.println(" 9. Файл передан")); //может, еще куда передадим?
+            future.addListener((ChannelFutureListener) channelFuture -> System.out.println(" 9. Файл передан"));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
-    public Object readCommandResult() {
-        return null;
-    } // DEN - типа при хэндлерах она нам не нужна
-
-    @Override
     public void closeConnection() {
-//        if(channel.isOpen()) { // мой вариант условия
-//        channel.close();
-//    }
-        try {  //чуть по-другому вариант Дениса
+        try {
             if (isConnected()) {
                 channel.close().sync();
             }
@@ -111,12 +96,10 @@ public class NettyNetworkService implements NetworkService {  // ПОКА НЕП
         }
     }
 
-
     @Override
     public boolean isConnected() { // TODO добавить метод в интерфейс
         return channel != null && !channel.isShutdown();
     }
-
 
 }
 

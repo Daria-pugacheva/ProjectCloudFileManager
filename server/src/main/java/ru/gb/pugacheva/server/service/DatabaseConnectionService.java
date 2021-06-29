@@ -4,10 +4,8 @@ import java.sql.Statement;
 
 public interface DatabaseConnectionService {
 
-   // void openConnection ();
-   Statement getStmt();
+    Statement getStmt();
 
-    void closeConnection ();
-
+    void closeConnection();
 
 }

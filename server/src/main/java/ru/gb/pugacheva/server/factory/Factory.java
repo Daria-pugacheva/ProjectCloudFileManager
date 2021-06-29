@@ -4,36 +4,34 @@ import ru.gb.pugacheva.server.service.*;
 import ru.gb.pugacheva.server.service.impl.*;
 import ru.gb.pugacheva.server.service.impl.command.AuthenticationCommand;
 import ru.gb.pugacheva.server.service.impl.command.ListCreatingCommand;
-import ru.gb.pugacheva.server.service.impl.command.ViewFilesInDirCommand;
 
-import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
 
 public class Factory {
 
-   public static ServerService getServerService (){
+    public static ServerService getServerService() {
         return new NettyServerService();
     }
 
-    public static CommandDictionaryService getCommandDictionaryService(){
+    public static CommandDictionaryService getCommandDictionaryService() {
         return new CommandDictionaryServiceImpl();
     }
 
-    public static List<CommandService> getCommandServices (){
+    public static List<CommandService> getCommandServices() {
         return Arrays.asList(new AuthenticationCommand(), new ListCreatingCommand());
     }
 
-    public static DatabaseConnectionService getDatabaseConnectionService(){
+    public static DatabaseConnectionService getDatabaseConnectionService() {
         return new DatabaseConnectionServiceImpl();
     }
 
-    public static AuthenticationService getAuthenticationService(){
+    public static AuthenticationService getAuthenticationService() {
         return new AuthenticationServiceImpl();
     }
 
 
-    public static ListOfFilesService getListOfFilesService(){
+    public static ListOfFilesService getListOfFilesService() {
         return new ListOfFilesService();
     }
 }

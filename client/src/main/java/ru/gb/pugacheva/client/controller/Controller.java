@@ -1,6 +1,5 @@
 package ru.gb.pugacheva.client.controller;
 
-import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
@@ -10,13 +9,12 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+
 import ru.gb.pugacheva.client.factory.Factory;
 import ru.gb.pugacheva.client.service.NetworkService;
-import ru.gb.pugacheva.client.service.impl.NettyNetworkService;
 import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.FileInfo;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -42,10 +40,6 @@ public class Controller implements Initializable {
         return networkService;
     }
 
-    public void setNetworkService(NetworkService networkService) {
-        this.networkService = networkService;
-    }
-
     public String getLogin() {
         return login;
     }
@@ -57,22 +51,16 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         workPanel.setVisible(false);
-
-       // networkService = Factory.getNetworkService(); // мой вариантTODO: возможно, момент подключения лучше перенести на кнопку регистрации?
-
-        networkService = Factory.initializeNetworkService(); // DEN
+        networkService = Factory.initializeNetworkService();
 
         makeClientTable();
         makeServerTable();
 
-        createClientListFiles(Paths.get("C:/Файловая система клиента/"));  // выводим изначально систему от диска С. МОЖЕТ, перенести на авторизацию
-
-        //createCommandResultHandler(); пока уберем
-
+        createClientListFiles(Paths.get("C:/Файловая система клиента"));
     }
 
     private void makeClientTable() {
-        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: упаковать в метод + добавить формирование таблицы в части серверной
+        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: декомпозировать код
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
         clientFileTypeColumn.setPrefWidth(48);
 
@@ -104,25 +92,11 @@ public class Controller implements Initializable {
 
         clientFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
 
-        moveIntoDirectory(clientFiles,clientPathToFile);
-
-//        clientFiles.setOnMouseClicked(new EventHandler<MouseEvent>() { //TODO: вынести отдельным методом(общим со стр.133)
-//            @Override
-//            public void handle(MouseEvent event) {
-//                if (event.getClickCount() == 2) {
-//                    Path currentPath = Paths.get(clientPathToFile.getText());
-//                    Path newPath = currentPath.resolve(clientFiles.getSelectionModel().getSelectedItem().getFileName());
-//                    if (Files.isDirectory(newPath)) {
-//                        createClientListFiles(newPath);
-//                    }
-//                }
-//
-//            }
-//        });
+        moveIntoDirectory(clientFiles, clientPathToFile);
     }
 
-    private void moveIntoDirectory (TableView <FileInfo> tableView, TextField textField ){
-        tableView.setOnMouseClicked(new EventHandler<MouseEvent>() { //TODO: вынести отдельным методом(общим со стр.133)
+    private void moveIntoDirectory(TableView<FileInfo> tableView, TextField textField) {
+        tableView.setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
                 if (event.getClickCount() == 2) {
@@ -138,7 +112,7 @@ public class Controller implements Initializable {
     }
 
     private void makeServerTable() {
-        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип");
+        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: декомпозировать код
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
         clientFileTypeColumn.setPrefWidth(48);
 
@@ -169,12 +143,9 @@ public class Controller implements Initializable {
         });
 
         serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
-
-        moveIntoDirectory(serverFiles,serverPathToFile); // возможно, не надо. Смотреть
-
     }
 
-    public void createClientListFiles(Path path) { // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
+    public void createClientListFiles(Path path) {
         try {
             clientPathToFile.setText(path.normalize().toAbsolutePath().toString());
             clientFiles.getItems().clear();
@@ -187,13 +158,13 @@ public class Controller implements Initializable {
         }
     }
 
-    public void createServerListFiles(String path, List<FileInfo> list) { // ЗАВЕСТИ ОТДЕЛЬНЫЙ КЛАСС/Интерфейс, который отвечает за заполнение таблицы
+    public void createServerListFiles(String path, List<FileInfo> list) {
         System.out.println("в методе по заполнению окна клиента лист  " + list);
         serverPathToFile.clear();
         serverPathToFile.setText(path);
-        serverFiles.getItems().clear();//+
-        serverFiles.getItems().addAll(list);//+
-        serverFiles.sort();//+
+        serverFiles.getItems().clear();
+        serverFiles.getItems().addAll(list);
+        serverFiles.sort();
     }
 
     public void clientMoveUpInFilePath(ActionEvent actionEvent) {
@@ -204,17 +175,16 @@ public class Controller implements Initializable {
         }
     }
 
-    public void createAlert (String text){
+    public void createAlert(String text) {
         Alert alert = new Alert(Alert.AlertType.WARNING, text, ButtonType.OK);
         alert.showAndWait();
-
     }
 
     public void shutdown() {
         networkService.closeConnection();
     }
 
-    public void login(ActionEvent actionEvent) {  //отправка на сервер логина и пароля
+    public void login(ActionEvent actionEvent) {
         if (!networkService.isConnected()) {
             networkService = Factory.initializeNetworkService();
         }
@@ -222,15 +192,12 @@ public class Controller implements Initializable {
         if (textCommand.length > 2) {
             String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
             networkService.sendCommand(new Command(textCommand[0], commandArgs));
-        }else{
+        } else {
             createAlert("Не все поля для регистрации заполнены: введите логин и пароль");
         }
-        // networkService.sendCommand("login " + loginField.getText() + " " + passwordField.getText());
         loginField.clear();
         passwordField.clear();
     }
-
-
 
     public void download(ActionEvent actionEvent) {
         uploadButton.setDisable(true); //TODO: ДОДЕЛАТЬ, ЧТОБЫ БЛОКИРОВКА КНОПОК СНИМАЛАСЬ, ЕСЛИ ПРОБЛЕМА С ФАЙЛОМ.
@@ -239,9 +206,9 @@ public class Controller implements Initializable {
             networkService = Factory.initializeNetworkService();
         }
         Long fileSize = serverFiles.getSelectionModel().getSelectedItem().getSize();
-        Object [] commandArgs = {getSelectedFilename(serverFiles), login, fileSize};
+        Object[] commandArgs = {getSelectedFilename(serverFiles), login, fileSize};
         Command command = new Command("download", commandArgs);
-        networkService.sendCommand(command); // на сервер download + имя файла + логин и размер
+        networkService.sendCommand(command);
         System.out.println("1.Нажали на кнопку и из хэндлера отправли команду download" + Arrays.asList(commandArgs));
     }
 
@@ -251,82 +218,23 @@ public class Controller implements Initializable {
         if (!networkService.isConnected()) {
             networkService = Factory.initializeNetworkService();
         }
-        String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) +"\\"+ getSelectedFilename(clientFiles); //TODO: смотреть, почему файл не находится, когда проваливаюсь в папки.
+        String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) + "\\" + getSelectedFilename(clientFiles); //TODO: смотреть, почему файл не находится, когда проваливаюсь в папки.
         Long fileSize = clientFiles.getSelectionModel().getSelectedItem().getSize();
-        Object [] commandArgs = {getSelectedFilename(clientFiles), absolutePathOfUploadFile,login,fileSize};
-        Command command = new Command("upload",commandArgs);
-        networkService.sendCommand(command); // на сервер upload + имя файла
-        System.out.println("1.Нажали на кнопку и из хэндлера отправли команду upload" + getSelectedFilename(clientFiles)+ absolutePathOfUploadFile+login);
+        Object[] commandArgs = {getSelectedFilename(clientFiles), absolutePathOfUploadFile, login, fileSize};
+        Command command = new Command("upload", commandArgs);
+        networkService.sendCommand(command);
+        System.out.println("1.Нажали на кнопку и из хэндлера отправли команду upload" + getSelectedFilename(clientFiles) + absolutePathOfUploadFile + login);
     }
 
-    public String getSelectedFilename (TableView <FileInfo> tableView){ // указываем, с какой панелью имеем дело
-        if (!tableView.isFocused()){
+    public String getSelectedFilename(TableView<FileInfo> tableView) {
+        if (!tableView.isFocused()) {
             return null;
         }
         return tableView.getSelectionModel().getSelectedItem().getFileName();
     }
 
-    public String getcurrentPath (TextField textField){
+    public String getcurrentPath(TextField textField) {
         return textField.getText();
     }
-
-
-//clientFiles.getSelectionModel().getSelectedItem().getFileName(); - последовательность для поиска имени файла
-
- //   private void createCommandResultHandler() {
-//        new Thread(() -> {
-//
-//            // byte [] buffer = new byte [1024]; / убрать. это было для айт-буффера
-//            //в этом цикле по-идее происходит авторизация
-//            while (true) {
-//                Object obj = networkService.readCommandResult();
-//                if (obj.getClass().equals(String.class)) {
-//                    String resultCommand = (String) obj; // каст, потому что знаем, что тут авторизация и будет строка
-////                int bytesFromBuffer = networkService.readCommandResult(buffer); //убрать , был вариант с байт-буффером
-////                String resultCommand = new String(buffer,0,bytesFromBuffer); //убрать , был вариант с байт-буффером
-////  }
-//                    if (resultCommand.startsWith("registrationOK") || resultCommand.startsWith("loginOK")) {
-//                        login = resultCommand.split("\\s")[1];
-//                        Platform.runLater(() -> loginPanel.setVisible(false));
-//                        Platform.runLater(() -> workPanel.setVisible(true));
-//
-//                        String[] args = {login};
-//                        networkService.sendCommand(new Command("filesList", args));
-//                        break;
-//                    } else if (resultCommand.startsWith("registrationFailed")) {
-//                        Platform.runLater(() -> createAlert("Такой логин уже существует" +
-//                                " с другим паролем. Введите другую пару логин/пароль для регистрации"));
-//                    }
-//                } else if (obj.getClass().equals(Integer.class)) {
-//                    List<FileInfo> resultCommand = (List<FileInfo>) obj;
-//                    Platform.runLater(() -> createServerListFiles(resultCommand));
-//                    Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
-//                }
-//            }
-//
-//
-//            //дальше должен бы идти цикл для работы с хранилищем, но пока, вроде, все в одном цикле происходит
-////            while (true) {
-////                List<FileInfo> resultCommand = (List<FileInfo>) networkService.readCommandResult();
-////                Platform.runLater(() -> createServerListFiles(resultCommand));
-////                Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + resultCommand)); // убрать. для проверки
-////            }
-//        }).start();
-//    }
-
-    //  в хранилище будут просто файлы. по папкам не будет движения - убрать этот метод и кнопку из fxml
-    public void serverMoveUpInFilePath(ActionEvent actionEvent) {
-        Path currentPath = Paths.get(serverPathToFile.getText());
-        if(currentPath.endsWith(login)){
-            return;
-        }
-        Path upperPath = currentPath.getParent();
-        if (upperPath != null) {
-            createClientListFiles(upperPath);
-        }
-    }
-
-
-
 
 }

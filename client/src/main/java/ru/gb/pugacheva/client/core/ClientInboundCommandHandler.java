@@ -10,26 +10,23 @@ import ru.gb.pugacheva.client.MainClientApp;
 import ru.gb.pugacheva.client.controller.Controller;
 import ru.gb.pugacheva.client.factory.Factory;
 import ru.gb.pugacheva.client.service.CommandDictionaryService;
-import ru.gb.pugacheva.client.service.NetworkService;
-import ru.gb.pugacheva.client.service.impl.ClientCommandDictionaryServiceImpl;
-import ru.gb.pugacheva.client.service.impl.NettyNetworkService;
 import ru.gb.pugacheva.common.domain.Command;
 
 import java.util.Arrays;
 
-public class ClientCommandHandler extends SimpleChannelInboundHandler<Command> {
-
+public class ClientInboundCommandHandler extends SimpleChannelInboundHandler<Command> {
+    //TODO: 1. внимательно логировать, убрать все лишние sout; 2.смотреть, может, как-то декомпозировать код
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
-        if(command.getCommandName().startsWith("readyToUpload")){
+    protected void channelRead0(ChannelHandlerContext ctx, Command command){
+        if (command.getCommandName().startsWith("readyToUpload")) {
             System.out.println("5.На клиенте получена команда readyToUpload" + Arrays.asList(command.getArgs()));
             ctx.pipeline().addLast(new ChunkedWriteHandler());
             ctx.pipeline().remove(ObjectEncoder.class);
             System.out.println("6. Пайплайна на клиенте после смены " + ctx.pipeline().toString());
             CommandDictionaryService commandDictionary = Factory.getCommandDictionary();
             commandDictionary.processCommand(command);
-        }else if(command.getCommandName().startsWith("UploadFinished")){
-            System.out.println("13 или 14 Получена с сервера команда UploadFinished для файла " + Arrays.asList(command.getArgs()));
+        } else if (command.getCommandName().startsWith("UploadFinished")) {
+            System.out.println("13 Получена с сервера команда UploadFinished для файла " + Arrays.asList(command.getArgs()));
             ctx.pipeline().remove(ChunkedWriteHandler.class);
             ctx.pipeline().remove(ObjectDecoder.class);
             ctx.pipeline().addFirst(new ObjectEncoder());
@@ -40,33 +37,30 @@ public class ClientCommandHandler extends SimpleChannelInboundHandler<Command> {
             currentController.getNetworkService().sendCommand(new Command("filesList", args));
             currentController.uploadButton.setDisable(false);
             currentController.downloadButton.setDisable(false);
-        } else if(command.getCommandName().startsWith("readyToDownload")){
+        } else if (command.getCommandName().startsWith("readyToDownload")) {
             System.out.println("5.На клиенте получена команда readyToDownload" + Arrays.asList(command.getArgs()));
             FilesInboundClientHandler.setFileName((String) command.getArgs()[0]);
             FilesInboundClientHandler.setFileSize((Long) command.getArgs()[2]);
             Controller currentController = (Controller) MainClientApp.getActiveController();
-            String userDirectoryForDounload  = currentController.clientPathToFile.getText();
+            String userDirectoryForDounload = currentController.clientPathToFile.getText();
             FilesInboundClientHandler.setUserDirectory(userDirectoryForDounload);
-            ctx.pipeline().remove(ClientCommandHandler.class);
+            ctx.pipeline().remove(ClientInboundCommandHandler.class);
             ctx.pipeline().remove(ObjectDecoder.class);
             ctx.pipeline().addLast(new ChunkedWriteHandler());
             ctx.pipeline().addLast(new FilesInboundClientHandler());
             System.out.println("6. Пайплайна на клиенте после смены " + ctx.pipeline().toString());
-            Object [] argsToServer = {command.getArgs()[0],command.getArgs()[1]};
-            ctx.writeAndFlush(new Command("readyToRecieve",argsToServer));
+            Object[] argsToServer = {command.getArgs()[0], command.getArgs()[1]};
+            ctx.writeAndFlush(new Command("readyToRecieve", argsToServer));
             System.out.println("7. На сервер отправлена каманда readyToRecieve " + Arrays.asList(argsToServer));
         } else {
             CommandDictionaryService commandDictionary = Factory.getCommandDictionary();
             commandDictionary.processCommand(command);
         }
-
-       System.out.println("нетти соединение сработало"); // для проверки
     }
 
-
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause){
-        System.out.println(cause); // потом заменить на логер
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        System.out.println(cause);
     }
 }
 

@@ -14,9 +14,8 @@ public class CloudFilesListCommand implements CommandService {
     @Override
     public void processCommand(Command command) {
         Controller currentController = (Controller) MainClientApp.getActiveController();
-        Platform.runLater(() -> currentController.createServerListFiles((String) command.getArgs()[0],(List<FileInfo>) command.getArgs()[1]));
-        Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + (List<FileInfo>) command.getArgs()[1]));
-
+        Platform.runLater(() -> currentController.createServerListFiles((String) command.getArgs()[0], (List<FileInfo>) command.getArgs()[1]));
+        Platform.runLater(() -> System.out.println("Поступил в контроллер лист " + command.getArgs()[1]));
     }
 
     @Override

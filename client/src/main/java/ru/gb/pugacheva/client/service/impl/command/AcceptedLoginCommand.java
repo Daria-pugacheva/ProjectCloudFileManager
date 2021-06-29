@@ -11,9 +11,9 @@ public class AcceptedLoginCommand implements CommandService {
     @Override
     public void processCommand(Command command) {
         Controller currentController = (Controller) MainClientApp.getActiveController();
-        currentController.setLogin ((String) command.getArgs()[0]) ;
-        Platform.runLater(()-> currentController.loginPanel.setVisible(false));
-        Platform.runLater(()-> currentController.workPanel.setVisible(true));
+        currentController.setLogin((String) command.getArgs()[0]);
+        Platform.runLater(() -> currentController.loginPanel.setVisible(false));
+        Platform.runLater(() -> currentController.workPanel.setVisible(true));
         String[] args = {currentController.getLogin()};
         currentController.getNetworkService().sendCommand(new Command("filesList", args));
     }

@@ -18,9 +18,9 @@ public class CommandDictionaryServiceImpl implements CommandDictionaryService {
         this.commandDictionary = Collections.unmodifiableMap(getCommandDictionary());
     }
 
-    private Map <String, CommandService> getCommandDictionary() {
+    private Map<String, CommandService> getCommandDictionary() {
         List<CommandService> commandServices = Factory.getCommandServices();
-        Map <String , CommandService> commandDictionary = new HashMap<>();
+        Map<String, CommandService> commandDictionary = new HashMap<>();
         for (CommandService commandService : commandServices) {
             commandDictionary.put(commandService.getCommand(), commandService);
         }
@@ -29,11 +29,10 @@ public class CommandDictionaryServiceImpl implements CommandDictionaryService {
 
     @Override
     public Object processCommand(Command command) {
-       // String [] commandParts = command.split("\\s");
 
-        if (commandDictionary.containsKey(command.getCommandName())){
+        if (commandDictionary.containsKey(command.getCommandName())) {
             return commandDictionary.get(command.getCommandName()).processCommand(command);
         }
-        return null; //"Error command";
+        return null;
     }
 }

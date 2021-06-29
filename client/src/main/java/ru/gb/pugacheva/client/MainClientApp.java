@@ -22,10 +22,10 @@ public class MainClientApp extends Application {
         Parent parent = loader.load();
         primaryStage.setScene(new Scene(parent));
         primaryStage.setTitle("Облачное хранилище");
-        primaryStage.setResizable(false); // потом решить, может сделать все-таки true
+        primaryStage.setResizable(true);
 
         Controller controller = loader.getController();
-        activeController = controller; // запомнили, какой контроллер работает
+        activeController = controller;
         primaryStage.setOnCloseRequest((event) -> controller.shutdown());
         primaryStage.show();
     }

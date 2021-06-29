@@ -6,12 +6,10 @@ public interface AuthenticationService {
 
     boolean isClientRegistered(String login, String password);
 
-    boolean isLoginBusy (String login);
+    boolean isLoginBusy(String login);
 
-    boolean registerClient (String login, String password);
+    boolean registerClient(String login, String password);
 
-    void close ();
-
-
+    void close();
 
 }

@@ -11,27 +11,27 @@ import java.util.List;
 import java.util.Map;
 
 public class ClientCommandDictionaryServiceImpl implements CommandDictionaryService {
+
     private final Map<String, CommandService> commandDictionary;
 
     public ClientCommandDictionaryServiceImpl() {
         this.commandDictionary = Collections.unmodifiableMap(getCommandDictionary());
     }
 
-    private Map <String, CommandService> getCommandDictionary() {
+    private Map<String, CommandService> getCommandDictionary() {
         List<CommandService> commandServices = Factory.getCommandServices();
-        Map <String , CommandService> commandDictionary = new HashMap<>();
+        Map<String, CommandService> commandDictionary = new HashMap<>();
         for (CommandService commandService : commandServices) {
             commandDictionary.put(commandService.getCommand(), commandService);
         }
         return commandDictionary;
     }
 
-
     @Override
     public void processCommand(Command command) {
-        if (commandDictionary.containsKey(command.getCommandName())){
+        if (commandDictionary.containsKey(command.getCommandName())) {
             commandDictionary.get(command.getCommandName()).processCommand(command);
         }
-
     }
+
 }

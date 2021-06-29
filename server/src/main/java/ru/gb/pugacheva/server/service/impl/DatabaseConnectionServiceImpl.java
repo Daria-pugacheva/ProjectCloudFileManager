@@ -29,16 +29,6 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
         }
     }
 
-//    @Override
-//    public void openConnection() {
-//        try {
-//            Class.forName("org.sqlite.JDBC");
-//        } catch (ClassNotFoundException e) {
-//            e.printStackTrace();
-//            throw new RuntimeException("Не удается подключиться к базе данных");
-//        }
-//    }
-
     @Override
     public void closeConnection() {
         if (stmt != null) {
@@ -48,7 +38,6 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
                 e.printStackTrace();
             }
         }
-
         if (connection != null) {
             try {
                 connection.close();
@@ -57,8 +46,5 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
             }
         }
     }
-
-
-
 
 }

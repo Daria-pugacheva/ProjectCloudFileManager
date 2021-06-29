@@ -15,14 +15,6 @@ import java.util.List;
 
 public class Factory {
 
-//    public static NetworkService getNetworkService(){
-//        return IONetworkService.getInstance();
-//    }
-
-//    public static NetworkService getNetworkService(){
-//        return new NettyNetworkService();
-//    } // стартовый мой вариант сети с Нетти
-
     public static NetworkService initializeNetworkService() {
         return NettyNetworkService.initializeNetwork();
     }
@@ -35,12 +27,9 @@ public class Factory {
         return new ClientCommandDictionaryServiceImpl();
     }
 
-
     public static List<CommandService> getCommandServices() {
         return Arrays.asList(new AcceptedLoginCommand(), new FailedLoginCommand(),
-                new CloudFilesListCommand(), new UploadFileCommand()); // команды добавлять
+                new CloudFilesListCommand(), new UploadFileCommand());
     }
-
-     //TODO для клиента добавить сюда создание словаря команд по аналогии с сервером
 
 }

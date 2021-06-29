@@ -4,5 +4,5 @@ import ru.gb.pugacheva.common.domain.Command;
 
 public interface CommandDictionaryService {
 
-    Object processCommand (Command command);
+    Object processCommand(Command command);
 }
