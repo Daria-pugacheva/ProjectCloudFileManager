@@ -1,4 +1,4 @@
-package ru.gb.pugacheva.server.service;
+package ru.gb.pugacheva.server.core;
 
 public interface ServerService {
 

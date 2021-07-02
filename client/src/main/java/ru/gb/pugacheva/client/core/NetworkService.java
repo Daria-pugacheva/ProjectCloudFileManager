@@ -1,4 +1,4 @@
-package ru.gb.pugacheva.client.service;
+package ru.gb.pugacheva.client.core;
 
 import ru.gb.pugacheva.common.domain.Command;
 

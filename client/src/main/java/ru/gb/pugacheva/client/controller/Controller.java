@@ -11,9 +11,10 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 
 import ru.gb.pugacheva.client.factory.Factory;
-import ru.gb.pugacheva.client.service.NetworkService;
+import ru.gb.pugacheva.client.core.NetworkService;
 import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.FileInfo;
+import ru.gb.pugacheva.common.domain.PropertiesReciever;
 
 import java.io.IOException;
 import java.net.URL;
@@ -25,12 +26,20 @@ import java.util.stream.Collectors;
 
 public class Controller implements Initializable {
 
-    public HBox loginPanel, workPanel;
-    public TextField loginField, clientPathToFile, serverPathToFile;
+    public HBox loginPanel;
+    public HBox workPanel;
+
+    public TextField loginField;
+    public TextField clientPathToFile;
+    public TextField serverPathToFile;
+
     public PasswordField passwordField;
-    @FXML
-    TableView<FileInfo> clientFiles, serverFiles;
-    public Button downloadButton, uploadButton;
+
+    public TableView<FileInfo> clientFiles;
+    public TableView<FileInfo> serverFiles;
+
+    public Button downloadButton;
+    public Button uploadButton;
 
     private NetworkService networkService;
 
@@ -51,12 +60,20 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         workPanel.setVisible(false);
-        networkService = Factory.initializeNetworkService();
+        initializeNetworkService();
 
         makeClientTable();
         makeServerTable();
 
-        createClientListFiles(Paths.get("C:/Файловая система клиента"));
+        createClientListFiles(Paths.get(PropertiesReciever.getProperties("clientDirectory")));
+    }
+
+    private void initializeNetworkService(){
+        networkService = Factory.initializeNetworkService(()->{
+            downloadButton.setDisable(false);
+            uploadButton.setDisable(false);
+            createClientListFiles(Paths.get(clientPathToFile.getText()));
+        });
     }
 
     private void makeClientTable() {
@@ -95,22 +112,6 @@ public class Controller implements Initializable {
         moveIntoDirectory(clientFiles, clientPathToFile);
     }
 
-    private void moveIntoDirectory(TableView<FileInfo> tableView, TextField textField) {
-        tableView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent event) {
-                if (event.getClickCount() == 2) {
-                    Path currentPath = Paths.get(textField.getText());
-                    Path newPath = currentPath.resolve(tableView.getSelectionModel().getSelectedItem().getFileName());
-                    if (Files.isDirectory(newPath)) {
-                        createClientListFiles(newPath);
-                    }
-                }
-
-            }
-        });
-    }
-
     private void makeServerTable() {
         TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: декомпозировать код
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
@@ -143,6 +144,22 @@ public class Controller implements Initializable {
         });
 
         serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
+    }
+
+    private void moveIntoDirectory(TableView<FileInfo> tableView, TextField textField) {
+        tableView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                if (event.getClickCount() == 2) {
+                    Path currentPath = Paths.get(textField.getText());
+                    Path newPath = currentPath.resolve(tableView.getSelectionModel().getSelectedItem().getFileName());
+                    if (Files.isDirectory(newPath)) {
+                        createClientListFiles(newPath);
+                    }
+                }
+
+            }
+        });
     }
 
     public void createClientListFiles(Path path) {
@@ -186,7 +203,7 @@ public class Controller implements Initializable {
 
     public void login(ActionEvent actionEvent) {
         if (!networkService.isConnected()) {
-            networkService = Factory.initializeNetworkService();
+            initializeNetworkService();
         }
         String[] textCommand = {"login", loginField.getText(), passwordField.getText()};
         if (textCommand.length > 2) {
@@ -203,10 +220,11 @@ public class Controller implements Initializable {
         uploadButton.setDisable(true); //TODO: ДОДЕЛАТЬ, ЧТОБЫ БЛОКИРОВКА КНОПОК СНИМАЛАСЬ, ЕСЛИ ПРОБЛЕМА С ФАЙЛОМ.
         downloadButton.setDisable(true);
         if (!networkService.isConnected()) {
-            networkService = Factory.initializeNetworkService();
+            initializeNetworkService();
         }
         Long fileSize = serverFiles.getSelectionModel().getSelectedItem().getSize();
-        Object[] commandArgs = {getSelectedFilename(serverFiles), login, fileSize};
+        String userDirectoryForDounload = clientPathToFile.getText();
+        Object[] commandArgs = {getSelectedFilename(serverFiles), login, fileSize, userDirectoryForDounload};
         Command command = new Command("download", commandArgs);
         networkService.sendCommand(command);
         System.out.println("1.Нажали на кнопку и из хэндлера отправли команду download" + Arrays.asList(commandArgs));
@@ -216,7 +234,7 @@ public class Controller implements Initializable {
         uploadButton.setDisable(true); //TODO: ДОДЕЛАТЬ, ЧТОБЫ БЛОКИРОВКА КНОПОК СНИМАЛАСЬ, ЕСЛИ ПРОБЛЕМА С ФАЙЛОМ.
         downloadButton.setDisable(true);
         if (!networkService.isConnected()) {
-            networkService = Factory.initializeNetworkService();
+            initializeNetworkService();
         }
         String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) + "\\" + getSelectedFilename(clientFiles); //TODO: смотреть, почему файл не находится, когда проваливаюсь в папки.
         Long fileSize = clientFiles.getSelectionModel().getSelectedItem().getSize();

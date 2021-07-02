@@ -1,4 +1,4 @@
-package ru.gb.pugacheva.server.core;
+package ru.gb.pugacheva.server.core.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -7,9 +7,9 @@ import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import ru.gb.pugacheva.common.domain.Command;
+import ru.gb.pugacheva.server.core.ServerPipelineCheckoutService;
 import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.CommandDictionaryService;
-import ru.gb.pugacheva.server.service.impl.ListOfFilesService;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -18,11 +18,12 @@ import java.io.OutputStream;
 
 public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
 
-    private CommandDictionaryService dictionaryService; //TODO : оптимизировать, чтобы через словарь работало
+    //private CommandDictionaryService dictionaryService; //TODO : оптимизировать, чтобы через словарь работало
 
     private static String fileName;
     private static String userDirectory;
     private static Long fileSize;
+    private static String login;
 
     public static void setFileSize(Long fileSize) {
         FilesInboundHandler.fileSize = fileSize;
@@ -36,9 +37,11 @@ public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
         FilesInboundHandler.fileName = fileName;
     }
 
-    public FilesInboundHandler() {
-        this.dictionaryService = Factory.getCommandDictionaryService();
-    }
+    public static void setLogin (String login) {FilesInboundHandler.login = login;}
+
+//    public FilesInboundHandler() {
+//        this.dictionaryService = Factory.getCommandDictionaryService();
+//    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object chunkedFile) throws Exception {
@@ -57,16 +60,15 @@ public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
 
         if (newfile.length() == fileSize) {
             System.out.println("11. Файл должен быть вычитан");
-            ctx.pipeline().remove(ChunkedWriteHandler.class);
-            String[] args = {fileName};
+            ServerPipelineCheckoutService.createBasePipelineAfterUploadForInOutCommandTraffic(ctx);
+            System.out.println("13. Пайплайн на сервере после отправки файла " + ctx.pipeline().toString());
+            String[] args = {fileName, login};
             ctx.writeAndFlush(new Command("UploadFinished", args));
             System.out.println("12. На клиент с сервера отправлена команда UploadFinished");
-            ctx.pipeline().addFirst(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
-            ctx.pipeline().addLast(new CommandInboundHandler());
-            ctx.pipeline().remove(FilesInboundHandler.class);
-            System.out.println("13. Пайплайн на сервере после отправки файла " + ctx.pipeline().toString());
+
         }
     }
+
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {

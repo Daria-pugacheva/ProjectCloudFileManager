@@ -1,15 +1,11 @@
-package ru.gb.pugacheva.client.core;
+package ru.gb.pugacheva.client.core.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.stream.ChunkedWriteHandler;
-import ru.gb.pugacheva.client.MainClientApp;
-import ru.gb.pugacheva.client.controller.Controller;
-import ru.gb.pugacheva.client.factory.Factory;
-import ru.gb.pugacheva.client.service.CommandDictionaryService;
+
+import ru.gb.pugacheva.client.core.ClientPipelineCheckoutService;
+import ru.gb.pugacheva.client.service.Callback;
 import ru.gb.pugacheva.common.domain.Command;
 
 import java.io.BufferedOutputStream;
@@ -21,12 +17,10 @@ import java.util.Arrays;
 
 public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
 
-    private CommandDictionaryService dictionaryService; //TODO: или оптимизировать код, чтобы работать через команды, или, если будет удобнее текущаяя реализация, убрать лишнее поле и конструктор
-    private Controller currentController;
-
     private static String fileName;
     private static String userDirectory;
     private static Long fileSize;
+    private static Callback setButtonsAbleAndUpdateFilesLIstCallback;
 
     public static void setFileSize(Long fileSize) {
         FilesInboundClientHandler.fileSize = fileSize;
@@ -40,9 +34,8 @@ public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
         FilesInboundClientHandler.fileName = fileName;
     }
 
-    public FilesInboundClientHandler() {
-        this.dictionaryService = Factory.getCommandDictionary();
-        this.currentController = (Controller) MainClientApp.getActiveController();
+    public static void setSetButtonsAbleCallback(Callback setButtonsAbleAndUpdateFilesLIstCallback) {
+        FilesInboundClientHandler.setButtonsAbleAndUpdateFilesLIstCallback = setButtonsAbleAndUpdateFilesLIstCallback;
     }
 
     @Override
@@ -62,21 +55,15 @@ public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
 
         if (newfile.length() == fileSize) {
             System.out.println("10. Файл должен быть вычитан");
-            ctx.pipeline().remove(ChunkedWriteHandler.class);
+            ClientPipelineCheckoutService.createBasePipelineAfterDownloadForInOutCommandTraffic(ctx,setButtonsAbleAndUpdateFilesLIstCallback);
+
             String[] args = {fileName};
             ctx.writeAndFlush(new Command("finishedDownload", args));
-
             System.out.println("11. На сервер с клиента отправлена команда downloadFinished" + Arrays.asList(args));
-            ctx.pipeline().addFirst(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
-            ctx.pipeline().addLast(new ClientInboundCommandHandler());
-            ctx.pipeline().remove(FilesInboundClientHandler.class);
             System.out.println("12. Пайплайн на клиенте после отправки файла " + ctx.pipeline().toString());
-
-           // Controller currentController = (Controller) MainClientApp.getActiveController();
-            currentController.createClientListFiles(Paths.get(userDirectory)); //TODO: иногда не обновляется лист файлов после загрузки. Проверить, почему
             System.out.println("должен обновиться лист файлов в  директории юзера " + userDirectory);
-            currentController.downloadButton.setDisable(false);
-            currentController.uploadButton.setDisable(false);
+
+            setButtonsAbleAndUpdateFilesLIstCallback.callback(); //TODO: иногда не обновляется лист файлов после загрузки. Проверить, почему
         }
     }
 

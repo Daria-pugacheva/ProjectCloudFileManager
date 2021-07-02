@@ -1,17 +1,23 @@
 package ru.gb.pugacheva.common.domain;
 
+import lombok.Getter;
+import lombok.ToString;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+
+@Getter
+@ToString
 public class FileInfo implements Serializable {
 
     public enum FileType implements Serializable {
 
         FILE("F"), DIRECTORY("D");
-        private String name;
 
+        private String name;
         public String getName() {
             return name;
         }
@@ -21,24 +27,24 @@ public class FileInfo implements Serializable {
         }
     }
 
-    private String fileName;
+    private final String fileName;
+    private final String path;
 
-    private FileType fileType;
+    private final FileType fileType;
 
     private long size;
-    private String path;
 
-    public String getFileName() {
-        return fileName;
-    }
-
-    public FileType getFileType() {
-        return fileType;
-    }
-
-    public long getSize() {
-        return size;
-    }
+//    public String getFileName() {
+//        return fileName;
+//    }
+//
+//    public FileType getFileType() {
+//        return fileType;
+//    }
+//
+//    public long getSize() {
+//        return size;
+//    }
 
     public FileInfo(Path path) {
         try {
@@ -54,13 +60,13 @@ public class FileInfo implements Serializable {
         }
     }
 
-    @Override
-    public String toString() {
-        return "FileInfo{" +
-                "fileName='" + fileName + '\'' +
-                ", fileType=" + fileType +
-                ", size=" + size +
-                ", path=" + path +
-                '}';
-    }
+//    @Override
+//    public String toString() {
+//        return "FileInfo{" +
+//                "fileName='" + fileName + '\'' +
+//                ", fileType=" + fileType +
+//                ", size=" + size +
+//                ", path=" + path +
+//                '}';
+//    }
 }

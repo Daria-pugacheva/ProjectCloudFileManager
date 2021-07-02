@@ -1,5 +1,6 @@
-package ru.gb.pugacheva.server.service.impl;
+package ru.gb.pugacheva.server.service.impl.databaseConnection;
 
+import ru.gb.pugacheva.common.domain.PropertiesReciever;
 import ru.gb.pugacheva.server.service.DatabaseConnectionService;
 
 import java.sql.Connection;
@@ -13,14 +14,21 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
     private Statement stmt;
 
     @Override
+    public Connection getConnection() {
+        return connection;
+    }
+
+    @Override
     public Statement getStmt() {
         return stmt;
     }
 
     public DatabaseConnectionServiceImpl() {
         try {
-            Class.forName("org.sqlite.JDBC");
-            this.connection = DriverManager.getConnection("jdbc:sqlite:database.db");
+            //Class.forName("org.sqlite.JDBC");
+            Class.forName(PropertiesReciever.getProperties("dbDriver"));
+            //this.connection = DriverManager.getConnection("jdbc:sqlite:database.db");
+            this.connection = DriverManager.getConnection(PropertiesReciever.getProperties("dbURL"));
             this.stmt = connection.createStatement();
             System.out.println("Сервер подключен к БД");
         } catch (ClassNotFoundException | SQLException throwables) {

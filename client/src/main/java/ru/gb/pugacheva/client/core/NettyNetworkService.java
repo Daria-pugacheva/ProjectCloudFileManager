@@ -1,4 +1,4 @@
-package ru.gb.pugacheva.client.service.impl;
+package ru.gb.pugacheva.client.core;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -10,28 +10,30 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.stream.ChunkedFile;
 
-import ru.gb.pugacheva.client.core.ClientInboundCommandHandler;
-import ru.gb.pugacheva.client.service.NetworkService;
+import ru.gb.pugacheva.client.core.handler.ClientInboundCommandHandler;
+import ru.gb.pugacheva.client.service.Callback;
 import ru.gb.pugacheva.common.domain.Command;
+import ru.gb.pugacheva.common.domain.PropertiesReciever;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Locale;
 
 public class NettyNetworkService implements NetworkService {
 
     private static SocketChannel channel;
     private static NettyNetworkService network;
 
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 8189;
+    private static final String SERVER_HOST = PropertiesReciever.getProperties("host");
+    private static final int SERVER_PORT = Integer.parseInt(PropertiesReciever.getProperties("port").trim());
 
     private NettyNetworkService() {
     }
 
-    public static NettyNetworkService initializeNetwork() {
+    public static NettyNetworkService initializeNetwork(Callback setButtonsAbleAndUpdateFilesLIstCallback) {
         network = new NettyNetworkService();
-        initializeNetworkService();
+        initializeNetworkService(setButtonsAbleAndUpdateFilesLIstCallback);
         return network;
     }
 
@@ -39,7 +41,7 @@ public class NettyNetworkService implements NetworkService {
         return network;
     }
 
-    private static void initializeNetworkService() {
+    private static void initializeNetworkService(Callback setButtonsAbleAndUpdateFilesLIstCallback) {
         Thread t = new Thread(() -> {
             EventLoopGroup workGroup = new NioEventLoopGroup();
             try {
@@ -53,7 +55,7 @@ public class NettyNetworkService implements NetworkService {
                                 socketChannel.pipeline()
                                         .addLast(new ObjectDecoder(ClassResolvers.cacheDisabled(null)))
                                         .addLast(new ObjectEncoder())
-                                        .addLast(new ClientInboundCommandHandler());
+                                        .addLast(new ClientInboundCommandHandler(setButtonsAbleAndUpdateFilesLIstCallback));
                             }
                         });
                 ChannelFuture future = bootstrap.connect(SERVER_HOST, SERVER_PORT).sync();

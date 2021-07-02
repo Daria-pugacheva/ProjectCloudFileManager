@@ -4,13 +4,13 @@ import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.FileInfo;
 import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.CommandService;
-import ru.gb.pugacheva.server.service.impl.ListOfFilesService;
+import ru.gb.pugacheva.server.service.impl.ListOfClientFilesInCloudCreatingService;
 
 import java.util.List;
 
-public class ListCreatingCommand implements CommandService<List<FileInfo>> {
+public class ListCreatingCommand implements CommandService {
 
-    private ListOfFilesService listOfFilesService;
+    private ListOfClientFilesInCloudCreatingService listOfClientFilesInCloudCreatingService;
 
     @Override
     public List<FileInfo> processCommand(Command command) {
@@ -22,8 +22,8 @@ public class ListCreatingCommand implements CommandService<List<FileInfo>> {
     }
 
     private List<FileInfo> process(String login) {
-        listOfFilesService = Factory.getListOfFilesService();
-        return listOfFilesService.createServerFilesList(login);
+        listOfClientFilesInCloudCreatingService = Factory.getListOfFilesService();
+        return listOfClientFilesInCloudCreatingService.createServerFilesList(login);
     }
 
     @Override
