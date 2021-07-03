@@ -1,18 +1,22 @@
 package ru.gb.pugacheva.client.controller;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.client.factory.Factory;
 import ru.gb.pugacheva.client.core.NetworkService;
 import ru.gb.pugacheva.common.domain.Command;
+import ru.gb.pugacheva.common.domain.CommandType;
 import ru.gb.pugacheva.common.domain.FileInfo;
 import ru.gb.pugacheva.common.domain.PropertiesReciever;
 
@@ -42,12 +46,9 @@ public class Controller implements Initializable {
     public Button uploadButton;
 
     private NetworkService networkService;
-
     private String login = null;
 
-    public NetworkService getNetworkService() {
-        return networkService;
-    }
+    private static final Logger LOGGER = LogManager.getLogger(Controller.class);
 
     public String getLogin() {
         return login;
@@ -68,8 +69,8 @@ public class Controller implements Initializable {
         createClientListFiles(Paths.get(PropertiesReciever.getProperties("clientDirectory")));
     }
 
-    private void initializeNetworkService(){
-        networkService = Factory.initializeNetworkService(()->{
+    private void initializeNetworkService() {
+        networkService = Factory.initializeNetworkService(() -> {
             downloadButton.setDisable(false);
             uploadButton.setDisable(false);
             createClientListFiles(Paths.get(clientPathToFile.getText()));
@@ -77,53 +78,31 @@ public class Controller implements Initializable {
     }
 
     private void makeClientTable() {
-        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: декомпозировать код
-        clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
-        clientFileTypeColumn.setPrefWidth(48);
-
-        TableColumn<FileInfo, String> clientFileNameColumn = new TableColumn<>("Имя файла");
-        clientFileNameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileName()));
-        clientFileNameColumn.setPrefWidth(240);
-
-        TableColumn<FileInfo, Long> clientFileSizeColumn = new TableColumn<>("Размер файла");
-        clientFileSizeColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
-        clientFileSizeColumn.setPrefWidth(120);
-        clientFileSizeColumn.setCellFactory(column -> {
-            return new TableCell<FileInfo, Long>() {
-                @Override
-                protected void updateItem(Long item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (item == null || empty) {
-                        setText(null);
-                        setStyle("");
-                    } else {
-                        String text = String.format("%,d bytes", item);
-                        if (item == -1L) {
-                            text = "DIR";
-                        }
-                        setText(text);
-                    }
-                }
-            };
-        });
-
-        clientFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
+        clientFiles.getColumns().addAll(createFileTypeColumn("Тип", 48),
+                createFileNAmeColumn("Имя файла", 240),
+                createFileSizeColumn("Размер файла", 120));
 
         moveIntoDirectory(clientFiles, clientPathToFile);
     }
 
-    private void makeServerTable() {
-        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип"); //TODO: декомпозировать код
+    private TableColumn<FileInfo, String> createFileTypeColumn(String nameOFColumn, int prefWidth) {
+        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>(nameOFColumn);
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
-        clientFileTypeColumn.setPrefWidth(48);
+        clientFileTypeColumn.setPrefWidth(prefWidth);
+        return clientFileTypeColumn;
+    }
 
-        TableColumn<FileInfo, String> clientFileNameColumn = new TableColumn<>("Имя файла");
+    private TableColumn<FileInfo, String> createFileNAmeColumn(String nameOFColumn, int prefWidth) {
+        TableColumn<FileInfo, String> clientFileNameColumn = new TableColumn<>(nameOFColumn);
         clientFileNameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileName()));
-        clientFileNameColumn.setPrefWidth(240);
+        clientFileNameColumn.setPrefWidth(prefWidth);
+        return clientFileNameColumn;
+    }
 
-        TableColumn<FileInfo, Long> clientFileSizeColumn = new TableColumn<>("Размер файла");
+    private TableColumn<FileInfo, Long> createFileSizeColumn(String nameOFColumn, int prefWidth) {
+        TableColumn<FileInfo, Long> clientFileSizeColumn = new TableColumn<>(nameOFColumn);
         clientFileSizeColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
-        clientFileSizeColumn.setPrefWidth(120);
+        clientFileSizeColumn.setPrefWidth(prefWidth);
         clientFileSizeColumn.setCellFactory(column -> {
             return new TableCell<FileInfo, Long>() {
                 @Override
@@ -142,8 +121,13 @@ public class Controller implements Initializable {
                 }
             };
         });
+        return clientFileSizeColumn;
+    }
 
-        serverFiles.getColumns().addAll(clientFileTypeColumn, clientFileNameColumn, clientFileSizeColumn);
+    private void makeServerTable() {
+        serverFiles.getColumns().addAll(createFileTypeColumn("Тип", 48),
+                createFileNAmeColumn("Имя файла", 240),
+                createFileSizeColumn("Размер файла", 120));
     }
 
     private void moveIntoDirectory(TableView<FileInfo> tableView, TextField textField) {
@@ -157,7 +141,6 @@ public class Controller implements Initializable {
                         createClientListFiles(newPath);
                     }
                 }
-
             }
         });
     }
@@ -168,15 +151,13 @@ public class Controller implements Initializable {
             clientFiles.getItems().clear();
             clientFiles.getItems().addAll(Files.list(path).map(FileInfo::new).collect(Collectors.toList()));
             clientFiles.sort();
-
         } catch (IOException e) {
-            Alert alert = new Alert(Alert.AlertType.WARNING, "Не удалось обновить список файлов", ButtonType.OK);
-            alert.showAndWait();
+            createAlert("Не удалось обновить список файлов");
+            LOGGER.throwing(Level.ERROR, e);
         }
     }
 
     public void createServerListFiles(String path, List<FileInfo> list) {
-        System.out.println("в методе по заполнению окна клиента лист  " + list);
         serverPathToFile.clear();
         serverPathToFile.setText(path);
         serverFiles.getItems().clear();
@@ -195,6 +176,7 @@ public class Controller implements Initializable {
     public void createAlert(String text) {
         Alert alert = new Alert(Alert.AlertType.WARNING, text, ButtonType.OK);
         alert.showAndWait();
+        LOGGER.info("Клиенту показан Alert " + text);
     }
 
     public void shutdown() {
@@ -205,7 +187,7 @@ public class Controller implements Initializable {
         if (!networkService.isConnected()) {
             initializeNetworkService();
         }
-        String[] textCommand = {"login", loginField.getText(), passwordField.getText()};
+        String[] textCommand = {CommandType.LOGIN.toString(), loginField.getText(), passwordField.getText()}; //"login"
         if (textCommand.length > 2) {
             String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
             networkService.sendCommand(new Command(textCommand[0], commandArgs));
@@ -217,31 +199,51 @@ public class Controller implements Initializable {
     }
 
     public void download(ActionEvent actionEvent) {
-        uploadButton.setDisable(true); //TODO: ДОДЕЛАТЬ, ЧТОБЫ БЛОКИРОВКА КНОПОК СНИМАЛАСЬ, ЕСЛИ ПРОБЛЕМА С ФАЙЛОМ.
-        downloadButton.setDisable(true);
         if (!networkService.isConnected()) {
             initializeNetworkService();
         }
+        if (!serverFiles.isFocused()) {
+            createAlert("Не выбран файл для загрузки в облаке");
+        } else {
+            uploadButton.setDisable(true);
+            downloadButton.setDisable(true);
+
+            networkService.sendCommand(createDownloadCommand());
+        }
+    }
+
+    private Command createDownloadCommand() {
         Long fileSize = serverFiles.getSelectionModel().getSelectedItem().getSize();
-        String userDirectoryForDounload = clientPathToFile.getText();
-        Object[] commandArgs = {getSelectedFilename(serverFiles), login, fileSize, userDirectoryForDounload};
-        Command command = new Command("download", commandArgs);
-        networkService.sendCommand(command);
-        System.out.println("1.Нажали на кнопку и из хэндлера отправли команду download" + Arrays.asList(commandArgs));
+        String userDirectoryForDownload = clientPathToFile.getText();
+        Object[] commandArgs = {getSelectedFilename(serverFiles), login, fileSize, userDirectoryForDownload};
+        Command command = new Command(CommandType.DOWNLOAD.toString(), commandArgs);
+        LOGGER.info("Отправлена команда DOWNLOAD для файла " + getSelectedFilename(serverFiles) +
+                " от клиента " + login + " ,размер файла " + fileSize + " ,директория для загрузки файла " + userDirectoryForDownload);
+        return command;
     }
 
     public void upload(ActionEvent actionEvent) {
-        uploadButton.setDisable(true); //TODO: ДОДЕЛАТЬ, ЧТОБЫ БЛОКИРОВКА КНОПОК СНИМАЛАСЬ, ЕСЛИ ПРОБЛЕМА С ФАЙЛОМ.
-        downloadButton.setDisable(true);
         if (!networkService.isConnected()) {
             initializeNetworkService();
         }
-        String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) + "\\" + getSelectedFilename(clientFiles); //TODO: смотреть, почему файл не находится, когда проваливаюсь в папки.
+        if (!clientFiles.isFocused()) {
+            createAlert("Не выбран файл для загрузки в облаке");
+        } else {
+            uploadButton.setDisable(true);
+            downloadButton.setDisable(true);
+
+            networkService.sendCommand(createUploadCommand());
+        }
+    }
+
+    private Command createUploadCommand() {
+        String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) + "\\" + getSelectedFilename(clientFiles);
         Long fileSize = clientFiles.getSelectionModel().getSelectedItem().getSize();
         Object[] commandArgs = {getSelectedFilename(clientFiles), absolutePathOfUploadFile, login, fileSize};
-        Command command = new Command("upload", commandArgs);
-        networkService.sendCommand(command);
-        System.out.println("1.Нажали на кнопку и из хэндлера отправли команду upload" + getSelectedFilename(clientFiles) + absolutePathOfUploadFile + login);
+        Command command = new Command(CommandType.UPLOAD.toString(), commandArgs);
+        LOGGER.info("Отправлена команда UPLOAD для файла " + getSelectedFilename(clientFiles) +
+                " по пути " + absolutePathOfUploadFile + " от клиента " + login);
+        return command;
     }
 
     public String getSelectedFilename(TableView<FileInfo> tableView) {
@@ -253,6 +255,27 @@ public class Controller implements Initializable {
 
     public String getcurrentPath(TextField textField) {
         return textField.getText();
+    }
+
+    public void sendFile(String absolutePathToUploadFile) {
+        networkService.sendFile(absolutePathToUploadFile);
+    }
+
+    public void sendCommand(Command command) {
+        networkService.sendCommand(command);
+    }
+
+    public void changeLoginPanelToWorkPanel() {
+        Platform.runLater(() -> loginPanel.setVisible(false));
+        Platform.runLater(() -> workPanel.setVisible(true));
+    }
+
+    public void createServerListFilesOnGUI(String pathToClientDirectory, List<FileInfo> listOfFiles) {
+        Platform.runLater(() -> createServerListFiles(pathToClientDirectory, listOfFiles));
+    }
+
+    public void createAlertOnGUI(String textOfAlert) {
+        Platform.runLater(() -> createAlert(textOfAlert));
     }
 
 }

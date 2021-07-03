@@ -6,10 +6,7 @@ import ru.gb.pugacheva.client.service.CommandService;
 import ru.gb.pugacheva.client.core.NetworkService;
 import ru.gb.pugacheva.client.service.impl.ClientCommandDictionaryServiceImpl;
 import ru.gb.pugacheva.client.core.NettyNetworkService;
-import ru.gb.pugacheva.client.service.impl.command.AcceptedLoginCommand;
-import ru.gb.pugacheva.client.service.impl.command.CloudFilesListCommand;
-import ru.gb.pugacheva.client.service.impl.command.FailedLoginCommand;
-import ru.gb.pugacheva.client.service.impl.command.UploadFileCommand;
+import ru.gb.pugacheva.client.service.impl.command.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,10 +15,6 @@ public class Factory {
 
     public static NetworkService initializeNetworkService(Callback setButtonsAbleCallback) {
         return NettyNetworkService.initializeNetwork(setButtonsAbleCallback);
-    }
-
-    public static NetworkService getNetworkService() {
-        return NettyNetworkService.getNetwork();
     }
 
     public static CommandDictionaryService getCommandDictionary() {

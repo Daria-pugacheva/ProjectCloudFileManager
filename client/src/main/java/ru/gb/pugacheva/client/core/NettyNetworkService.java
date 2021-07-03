@@ -10,6 +10,9 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 import io.netty.handler.stream.ChunkedFile;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.client.core.handler.ClientInboundCommandHandler;
 import ru.gb.pugacheva.client.service.Callback;
 import ru.gb.pugacheva.common.domain.Command;
@@ -27,6 +30,8 @@ public class NettyNetworkService implements NetworkService {
 
     private static final String SERVER_HOST = PropertiesReciever.getProperties("host");
     private static final int SERVER_PORT = Integer.parseInt(PropertiesReciever.getProperties("port").trim());
+
+    private static final Logger LOGGER = LogManager.getLogger(NettyNetworkService.class);
 
     private NettyNetworkService() {
     }
@@ -61,7 +66,7 @@ public class NettyNetworkService implements NetworkService {
                 ChannelFuture future = bootstrap.connect(SERVER_HOST, SERVER_PORT).sync();
                 future.channel().closeFuture().sync();
             } catch (Exception e) {
-                e.printStackTrace();
+                LOGGER.throwing(Level.ERROR,e);
             } finally {
                 workGroup.shutdownGracefully();
             }
@@ -72,18 +77,18 @@ public class NettyNetworkService implements NetworkService {
 
     @Override
     public void sendCommand(Command command) {
-        System.out.println("command from client is " + command.getCommandName() + Arrays.asList(command.getArgs()));
         channel.writeAndFlush(command);
+        LOGGER.info("С клиента на сервер отправлена команда " + command.getCommandName() + " с аргументами "+ Arrays.asList(command.getArgs()));
     }
 
     @Override
     public void sendFile(String pathToFile) {
         try {
-            ChannelFuture future = channel.writeAndFlush(new ChunkedFile(new File(pathToFile))); //TODO: прикинуть, нужен ли листнер (пока удобно для проверки)
-            System.out.println("8. Должна стартовать передача файла " + pathToFile);
-            future.addListener((ChannelFutureListener) channelFuture -> System.out.println(" 9. Файл передан"));
+            ChannelFuture future = channel.writeAndFlush(new ChunkedFile(new File(pathToFile)));
+            LOGGER.info("Началась передача файла на сервер по пути " + pathToFile);
+            future.addListener((ChannelFutureListener) channelFuture -> LOGGER.info("Файл передан"));
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.throwing(Level.ERROR,e);
         }
     }
 
@@ -94,12 +99,12 @@ public class NettyNetworkService implements NetworkService {
                 channel.close().sync();
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.throwing(Level.ERROR,e);
         }
     }
 
     @Override
-    public boolean isConnected() { // TODO добавить метод в интерфейс
+    public boolean isConnected() {
         return channel != null && !channel.isShutdown();
     }
 

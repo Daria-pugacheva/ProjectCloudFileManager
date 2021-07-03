@@ -1,5 +1,8 @@
 package ru.gb.pugacheva.server.service.impl.databaseConnection;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.common.domain.PropertiesReciever;
 import ru.gb.pugacheva.server.service.DatabaseConnectionService;
 
@@ -13,6 +16,8 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
     private Connection connection;
     private Statement stmt;
 
+    private static final Logger LOGGER = LogManager.getLogger(DatabaseConnectionServiceImpl.class);
+
     @Override
     public Connection getConnection() {
         return connection;
@@ -25,14 +30,12 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
 
     public DatabaseConnectionServiceImpl() {
         try {
-            //Class.forName("org.sqlite.JDBC");
             Class.forName(PropertiesReciever.getProperties("dbDriver"));
-            //this.connection = DriverManager.getConnection("jdbc:sqlite:database.db");
             this.connection = DriverManager.getConnection(PropertiesReciever.getProperties("dbURL"));
             this.stmt = connection.createStatement();
-            System.out.println("Сервер подключен к БД");
+            LOGGER.info("Сервер подключен к базе данных");
         } catch (ClassNotFoundException | SQLException throwables) {
-            throwables.printStackTrace();
+            LOGGER.throwing(Level.ERROR,throwables);
             throw new RuntimeException("Не удается подключиться к базе данных");
         }
     }
@@ -43,14 +46,14 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
             try {
                 stmt.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOGGER.throwing(Level.ERROR,e);
             }
         }
         if (connection != null) {
             try {
                 connection.close();
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOGGER.throwing(Level.ERROR,e);
             }
         }
     }

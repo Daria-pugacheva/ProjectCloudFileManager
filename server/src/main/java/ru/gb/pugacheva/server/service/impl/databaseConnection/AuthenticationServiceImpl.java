@@ -1,5 +1,8 @@
 package ru.gb.pugacheva.server.service.impl.databaseConnection;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.server.core.NettyServerService;
 import ru.gb.pugacheva.server.service.AuthenticationService;
 import ru.gb.pugacheva.server.service.DatabaseConnectionService;
@@ -15,6 +18,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private PreparedStatement loginChecking;
     private PreparedStatement newClientCreation;
 
+    private static final Logger LOGGER = LogManager.getLogger(AuthenticationServiceImpl.class);
+
     public AuthenticationServiceImpl (){
         this.dbConnection = NettyServerService.getDatabaseConnectionService();
         createPreparedStatements();
@@ -26,7 +31,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             this.loginChecking = dbConnection.getConnection().prepareStatement("select id from clients where login = ?;");
             this.newClientCreation = dbConnection.getConnection().prepareStatement("insert into clients (login, pass) values (?,?);");
         } catch (SQLException throwables) {
-            throwables.printStackTrace();
+            LOGGER.throwing(Level.ERROR,throwables);
         }
     }
 
@@ -42,7 +47,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 }
             }
         }catch (SQLException throwables) {
-            throwables.printStackTrace();
+            LOGGER.throwing(Level.ERROR,throwables);
         }
         return false;
     }
@@ -57,7 +62,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 }
             }
         }catch (SQLException throwables) {
-            throwables.printStackTrace();
+            LOGGER.throwing(Level.ERROR,throwables);
         }
         return false;
     }
@@ -71,10 +76,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 newClientCreation.executeUpdate();
                 return true;
             } catch (SQLException e) {
-                e.printStackTrace();
+                LOGGER.throwing(Level.ERROR,e);
             }
         } else if (isLoginBusy(login)) {
-            System.out.println("логин занят");
+            LOGGER.info("логин занят");
         }
         return false;
     }
