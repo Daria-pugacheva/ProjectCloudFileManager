@@ -63,17 +63,23 @@ public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
                 byteBuf.release();
             }
 
-            if (newfile.length() == fileSize) {
-                LOGGER.info("Файл вычитан");
-                ClientPipelineCheckoutService.createBasePipelineAfterDownloadForInOutCommandTraffic(ctx, setButtonsAbleAndUpdateFilesLIstCallback);
+            createAnswerAboutSuccessDownload(newfile, ctx);
 
-                String[] args = {fileName};
-                ctx.writeAndFlush(new Command(CommandType.FINISHED_DOWNLOAD.toString(), args));
-                LOGGER.info("На сервер с клиента отправлена команда FINISHED_DOWNLOAD с аргументами " + Arrays.asList(args));
-
-                setButtonsAbleAndUpdateFilesLIstCallback.callback(); //TODO: иногда не обновляется лист файлов после загрузки. Проверить, почему
-            }
         }
+
+         private void createAnswerAboutSuccessDownload (File file, ChannelHandlerContext ctx){
+             if (file.length() == fileSize) {
+                 LOGGER.info("Файл вычитан");
+                 ClientPipelineCheckoutService.createBasePipelineAfterDownloadForInOutCommandTraffic(ctx, setButtonsAbleAndUpdateFilesLIstCallback);
+
+                 String[] args = {fileName};
+                 ctx.writeAndFlush(new Command(CommandType.FINISHED_DOWNLOAD.toString(), args));
+                 LOGGER.info("На сервер с клиента отправлена команда FINISHED_DOWNLOAD с аргументами " + Arrays.asList(args));
+
+                 setButtonsAbleAndUpdateFilesLIstCallback.callback(); //TODO: иногда не обновляется лист файлов после загрузки. Проверить, почему
+             }
+         }
+
 
 
     @Override

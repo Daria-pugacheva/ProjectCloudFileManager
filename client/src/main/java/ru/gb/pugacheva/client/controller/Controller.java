@@ -61,6 +61,9 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         workPanel.setVisible(false);
+        downloadButton.setVisible(false);
+        uploadButton.setVisible(false);
+
         initializeNetworkService();
 
         makeClientTable();
@@ -227,7 +230,7 @@ public class Controller implements Initializable {
             initializeNetworkService();
         }
         if (!clientFiles.isFocused()) {
-            createAlert("Не выбран файл для загрузки в облаке");
+            createAlert("Не выбран файл для выгрузки в облако");
         } else {
             uploadButton.setDisable(true);
             downloadButton.setDisable(true);
@@ -268,6 +271,8 @@ public class Controller implements Initializable {
     public void changeLoginPanelToWorkPanel() {
         Platform.runLater(() -> loginPanel.setVisible(false));
         Platform.runLater(() -> workPanel.setVisible(true));
+        Platform.runLater(() -> downloadButton.setVisible(true));
+        Platform.runLater(() -> uploadButton.setVisible(true));
     }
 
     public void createServerListFilesOnGUI(String pathToClientDirectory, List<FileInfo> listOfFiles) {

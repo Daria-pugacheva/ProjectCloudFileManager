@@ -57,7 +57,12 @@ public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
             byteBuf.release();
         }
 
-        if (newfile.length() == fileSize) {
+        createAnsweraboutSuccessUpload(newfile,ctx);
+
+    }
+
+    private void createAnsweraboutSuccessUpload (File file,ChannelHandlerContext ctx){
+        if (file.length() == fileSize) {
             LOGGER.info("Файл вычитан");
             ServerPipelineCheckoutService.createBasePipelineAfterUploadForInOutCommandTraffic(ctx);
 
