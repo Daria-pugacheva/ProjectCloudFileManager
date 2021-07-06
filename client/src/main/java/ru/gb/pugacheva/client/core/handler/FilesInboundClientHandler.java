@@ -23,28 +23,18 @@ import java.util.Arrays;
 
 public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
 
-    private static String fileName;
-    private static String userDirectory;
-    private static Long fileSize;
-    private static Callback setButtonsAbleAndUpdateFilesLIstCallback;
-
+    private String fileName;
+    private String userDirectory;
+    private Long fileSize;
+    private Callback setButtonsAbleAndUpdateFilesLIstCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(FilesInboundClientHandler.class);
 
-    public static void setFileSize(Long fileSize) {
-        FilesInboundClientHandler.fileSize = fileSize;
-    }
-
-    public static void setUserDirectory(String userDirectory) {
-        FilesInboundClientHandler.userDirectory = userDirectory;
-    }
-
-    public static void setFileName(String fileName) {
-        FilesInboundClientHandler.fileName = fileName;
-    }
-
-    public static void setSetButtonsAbleCallback(Callback setButtonsAbleAndUpdateFilesLIstCallback) {
-        FilesInboundClientHandler.setButtonsAbleAndUpdateFilesLIstCallback = setButtonsAbleAndUpdateFilesLIstCallback;
+    public FilesInboundClientHandler(String fileName, String userDirectory, Long fileSize, Callback setButtonsAbleAndUpdateFilesLIstCallback) {
+        this.fileName = fileName;
+        this.userDirectory = userDirectory;
+        this.fileSize = fileSize;
+        this.setButtonsAbleAndUpdateFilesLIstCallback = setButtonsAbleAndUpdateFilesLIstCallback;
     }
 
     @Override
@@ -54,33 +44,31 @@ public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
         File newfile = new File(absoluteFileNameForClient);
         newfile.createNewFile();
 
-            LOGGER.info("Создан файл и запущен процесс приема файла на клиенте по пути " + absoluteFileNameForClient);
+        LOGGER.info("Создан файл и запущен процесс приема файла на клиенте по пути " + absoluteFileNameForClient);
 
-            try (OutputStream out = new BufferedOutputStream(new FileOutputStream(absoluteFileNameForClient, true))) {
-                while (byteBuf.isReadable()) {
-                    out.write(byteBuf.readByte());
-                }
-                byteBuf.release();
+        try (OutputStream out = new BufferedOutputStream(new FileOutputStream(absoluteFileNameForClient, true))) {
+            while (byteBuf.isReadable()) {
+                out.write(byteBuf.readByte());
             }
-
-            createAnswerAboutSuccessDownload(newfile, ctx);
-
+            byteBuf.release();
         }
 
-         private void createAnswerAboutSuccessDownload (File file, ChannelHandlerContext ctx){
-             if (file.length() == fileSize) {
-                 LOGGER.info("Файл вычитан");
-                 ClientPipelineCheckoutService.createBasePipelineAfterDownloadForInOutCommandTraffic(ctx, setButtonsAbleAndUpdateFilesLIstCallback);
+        createAnswerAboutSuccessDownload(newfile, ctx);
 
-                 String[] args = {fileName};
-                 ctx.writeAndFlush(new Command(CommandType.FINISHED_DOWNLOAD.toString(), args));
-                 LOGGER.info("На сервер с клиента отправлена команда FINISHED_DOWNLOAD с аргументами " + Arrays.asList(args));
+    }
 
-                 setButtonsAbleAndUpdateFilesLIstCallback.callback(); //TODO: иногда не обновляется лист файлов после загрузки. Проверить, почему
-             }
-         }
+    private void createAnswerAboutSuccessDownload(File file, ChannelHandlerContext ctx) {
+        if (file.length() == fileSize) {
+            LOGGER.info("Файл вычитан");
+            ClientPipelineCheckoutService.createBasePipelineAfterDownloadForInOutCommandTraffic(ctx, setButtonsAbleAndUpdateFilesLIstCallback);
 
+            String[] args = {fileName};
+            ctx.writeAndFlush(new Command(CommandType.FINISHED_DOWNLOAD.toString(), args));
+            LOGGER.info("На сервер с клиента отправлена команда FINISHED_DOWNLOAD с аргументами " + Arrays.asList(args));
 
+            setButtonsAbleAndUpdateFilesLIstCallback.callback();
+        }
+    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {

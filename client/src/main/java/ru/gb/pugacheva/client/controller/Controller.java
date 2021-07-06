@@ -15,10 +15,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.client.factory.Factory;
 import ru.gb.pugacheva.client.core.NetworkService;
+import ru.gb.pugacheva.client.service.impl.ClientPropertiesReciever;
 import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.CommandType;
 import ru.gb.pugacheva.common.domain.FileInfo;
-import ru.gb.pugacheva.common.domain.PropertiesReciever;
 
 import java.io.IOException;
 import java.net.URL;
@@ -69,7 +69,7 @@ public class Controller implements Initializable {
         makeClientTable();
         makeServerTable();
 
-        createClientListFiles(Paths.get(PropertiesReciever.getProperties("clientDirectory")));
+        createClientListFiles(Paths.get(ClientPropertiesReciever.getProperties("clientDirectory")));
     }
 
     private void initializeNetworkService() {

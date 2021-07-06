@@ -8,10 +8,10 @@ import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.CommandType;
 import ru.gb.pugacheva.common.domain.FileInfo;
-import ru.gb.pugacheva.common.domain.PropertiesReciever;
 import ru.gb.pugacheva.server.core.ServerPipelineCheckoutService;
 import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.CommandDictionaryService;
+import ru.gb.pugacheva.server.service.impl.ServerPropertiesReciever;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -22,7 +22,7 @@ import java.util.List;
 public class CommandInboundHandler extends SimpleChannelInboundHandler<Command> {
 
     private final CommandDictionaryService dictionaryService;
-    private final Path currentPath = Paths.get(PropertiesReciever.getProperties("cloudDirectory"));
+    private final Path currentPath = Paths.get(ServerPropertiesReciever.getProperties("cloudDirectory"));
     private static final Logger LOGGER = LogManager.getLogger(CommandInboundHandler.class);
 
     public CommandInboundHandler() {
@@ -37,8 +37,11 @@ public class CommandInboundHandler extends SimpleChannelInboundHandler<Command> 
             ctx.writeAndFlush(createListOfClientFilesInCloud(command));
         } else if (command.getCommandName().startsWith(CommandType.UPLOAD.toString())) {
             LOGGER.info("От клиента на сервере получена команда UPLOAD с аргументами " + Arrays.asList(command.getArgs()));
-            setFieldsValueInFilesInboundHandler(command);
-            ServerPipelineCheckoutService.createPipelineForInboundFilesRecieving(ctx);
+
+            Path pathToUserDirectory = currentPath.resolve((String) command.getArgs()[2]);
+            String userDirectory = pathToUserDirectory.toString() + "\\";
+            ServerPipelineCheckoutService.createPipelineForInboundFilesRecieving(ctx, (String) command.getArgs()[0],
+                    userDirectory, (String) command.getArgs()[2], (Long) command.getArgs()[3]);
 
             ctx.writeAndFlush(new Command(CommandType.READY_TO_UPLOAD.toString(), command.getArgs()));
             LOGGER.info("C сервера клиенту отправлена команда READY_TO_UPLOAD с аргументами " + Arrays.asList(command.getArgs()));
@@ -72,15 +75,6 @@ public class CommandInboundHandler extends SimpleChannelInboundHandler<Command> 
         args[1] = resultListOfFiles;
         Command result = new Command(CommandType.CLOUD_FILESLIST.toString(), args);
         return result;
-    }
-
-    private void setFieldsValueInFilesInboundHandler(Command command) {
-        FilesInboundHandler.setFileName((String) command.getArgs()[0]);
-        Path userDirectory = currentPath.resolve((String) command.getArgs()[2]);
-        FilesInboundHandler.setUserDirectory(userDirectory.toString() + "\\");
-        FilesInboundHandler.setFileSize((Long) command.getArgs()[3]);
-        FilesInboundHandler.setLogin((String) command.getArgs()[2]);
-
     }
 
     private Command createReadytoDownloadAccept(Command command) {

@@ -15,21 +15,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.client.core.handler.ClientInboundCommandHandler;
 import ru.gb.pugacheva.client.service.Callback;
+import ru.gb.pugacheva.client.service.impl.ClientPropertiesReciever;
 import ru.gb.pugacheva.common.domain.Command;
-import ru.gb.pugacheva.common.domain.PropertiesReciever;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Locale;
 
 public class NettyNetworkService implements NetworkService {
 
     private static SocketChannel channel;
     private static NettyNetworkService network;
 
-    private static final String SERVER_HOST = PropertiesReciever.getProperties("host");
-    private static final int SERVER_PORT = Integer.parseInt(PropertiesReciever.getProperties("port").trim());
+    private static final String SERVER_HOST = ClientPropertiesReciever.getProperties("host");
+    private static final int SERVER_PORT = Integer.parseInt(ClientPropertiesReciever.getProperties("port").trim());
 
     private static final Logger LOGGER = LogManager.getLogger(NettyNetworkService.class);
 

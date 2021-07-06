@@ -10,9 +10,9 @@ import ru.gb.pugacheva.server.core.handler.FilesInboundHandler;
 
 public class ServerPipelineCheckoutService {
 
-    public static void createPipelineForInboundFilesRecieving(ChannelHandlerContext ctx) {
+    public static void createPipelineForInboundFilesRecieving(ChannelHandlerContext ctx, String fileName, String userDirectory, String login, Long fileSize) {
         ctx.pipeline().addLast(new ChunkedWriteHandler());
-        ctx.pipeline().addLast(new FilesInboundHandler());
+        ctx.pipeline().addLast(new FilesInboundHandler(fileName, userDirectory, login, fileSize));
         ctx.pipeline().remove(ObjectDecoder.class);
         ctx.pipeline().remove(CommandInboundHandler.class);
     }

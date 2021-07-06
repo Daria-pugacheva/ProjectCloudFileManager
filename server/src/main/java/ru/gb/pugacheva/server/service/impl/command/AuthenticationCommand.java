@@ -4,14 +4,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.CommandType;
-import ru.gb.pugacheva.common.domain.PropertiesReciever;
 import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.AuthenticationService;
 import ru.gb.pugacheva.server.service.CommandService;
+import ru.gb.pugacheva.server.service.impl.ServerPropertiesReciever;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class AuthenticationCommand implements CommandService {
 
@@ -44,7 +42,7 @@ public class AuthenticationCommand implements CommandService {
     }
 
     private void createUserDirectoryInCloud (String login){
-        String pathToDir = String.format(PropertiesReciever.getProperties("cloudDirectory") + "/%s/", login);
+        String pathToDir = String.format(ServerPropertiesReciever.getProperties("cloudDirectory") + "/%s/", login);
         File file = new File(pathToDir);
         file.mkdir();
     }

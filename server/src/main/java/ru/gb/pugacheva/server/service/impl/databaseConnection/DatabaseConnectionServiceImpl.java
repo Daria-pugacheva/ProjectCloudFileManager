@@ -3,8 +3,8 @@ package ru.gb.pugacheva.server.service.impl.databaseConnection;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.gb.pugacheva.common.domain.PropertiesReciever;
 import ru.gb.pugacheva.server.service.DatabaseConnectionService;
+import ru.gb.pugacheva.server.service.impl.ServerPropertiesReciever;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,8 +30,8 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
 
     public DatabaseConnectionServiceImpl() {
         try {
-            Class.forName(PropertiesReciever.getProperties("dbDriver"));
-            this.connection = DriverManager.getConnection(PropertiesReciever.getProperties("dbURL"));
+            Class.forName(ServerPropertiesReciever.getProperties("dbDriver"));
+            this.connection = DriverManager.getConnection(ServerPropertiesReciever.getProperties("dbURL"));
             this.stmt = connection.createStatement();
             LOGGER.info("Сервер подключен к базе данных");
         } catch (ClassNotFoundException | SQLException throwables) {

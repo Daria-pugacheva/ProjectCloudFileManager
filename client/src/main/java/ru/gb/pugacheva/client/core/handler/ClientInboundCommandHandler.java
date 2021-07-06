@@ -46,8 +46,9 @@ public class ClientInboundCommandHandler extends SimpleChannelInboundHandler<Com
 
         } else if (command.getCommandName().startsWith(CommandType.READY_TO_DOWNLOAD.toString())) {
             LOGGER.info("Получена с сервера команда READY_TO_DOWNLOAD с аргументами " + Arrays.asList(command.getArgs()));
-            setFieldsValueInFilesInboundClientHandler(command);
-            ClientPipelineCheckoutService.createPipelineForInboundFilesRecieving(ctx);
+
+            ClientPipelineCheckoutService.createPipelineForInboundFilesRecieving(ctx, (String) command.getArgs()[0],
+                    (String) command.getArgs()[3], (Long) command.getArgs()[2], setButtonsAbleAndUpdateFilesLIstCallback);
 
             Object[] argsToServer = {command.getArgs()[0], command.getArgs()[1]};
             ctx.writeAndFlush(new Command(CommandType.READY_TO_RECIEVE.toString(), argsToServer));
@@ -56,13 +57,6 @@ public class ClientInboundCommandHandler extends SimpleChannelInboundHandler<Com
             CommandDictionaryService commandDictionary = Factory.getCommandDictionary();
             commandDictionary.processCommand(command);
         }
-    }
-
-    private void setFieldsValueInFilesInboundClientHandler(Command command) {
-        FilesInboundClientHandler.setFileName((String) command.getArgs()[0]);
-        FilesInboundClientHandler.setFileSize((Long) command.getArgs()[2]);
-        FilesInboundClientHandler.setUserDirectory((String) command.getArgs()[3]);
-        FilesInboundClientHandler.setSetButtonsAbleCallback(setButtonsAbleAndUpdateFilesLIstCallback);
     }
 
     @Override

@@ -22,25 +22,19 @@ import java.io.OutputStream;
 
 public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
 
-    private static String fileName;
-    private static String userDirectory;
-    private static Long fileSize;
-    private static String login;
+    private  String fileName;
+    private  String userDirectory;
+    private  String login;
+    private  Long fileSize;
+
+    public FilesInboundHandler(String fileName, String userDirectory, String login, Long fileSize) {
+        this.fileName = fileName;
+        this.userDirectory = userDirectory;
+        this.login = login;
+        this.fileSize = fileSize;
+    }
 
     private static final Logger LOGGER = LogManager.getLogger(FilesInboundHandler.class);
-
-    public static void setFileSize(Long fileSize) {
-        FilesInboundHandler.fileSize = fileSize;
-    }
-    public static void setUserDirectory(String userDirectory) {
-        FilesInboundHandler.userDirectory = userDirectory;
-    }
-    public static void setFileName(String fileName) {
-        FilesInboundHandler.fileName = fileName;
-    }
-    public static void setLogin(String login) {
-        FilesInboundHandler.login = login;
-    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object chunkedFile) throws Exception {

@@ -11,26 +11,28 @@ import ru.gb.pugacheva.client.service.Callback;
 
 public class ClientPipelineCheckoutService {
 
-    public static void createPipelineForFilesSending (ChannelHandlerContext ctx){
+    public static void createPipelineForFilesSending(ChannelHandlerContext ctx) {
         ctx.pipeline().addLast(new ChunkedWriteHandler());
         ctx.pipeline().remove(ObjectEncoder.class);
     }
 
-    public static void createBasePipelineAfterUploadForInOutCommandTraffic (ChannelHandlerContext ctx){
+    public static void createBasePipelineAfterUploadForInOutCommandTraffic(ChannelHandlerContext ctx) {
         ctx.pipeline().remove(ChunkedWriteHandler.class);
-        ctx.pipeline().remove(ObjectDecoder .class);
+        ctx.pipeline().remove(ObjectDecoder.class);
         ctx.pipeline().addFirst(new ObjectEncoder());
         ctx.pipeline().addFirst(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
     }
 
-    public static void createPipelineForInboundFilesRecieving (ChannelHandlerContext ctx){
+    public static void createPipelineForInboundFilesRecieving(ChannelHandlerContext ctx, String filename,
+                                                              String userDirectory, Long filesize,
+                                                              Callback setButtonsAbleAndUpdateFilesLIstCallback) {
         ctx.pipeline().remove(ClientInboundCommandHandler.class);
         ctx.pipeline().remove(ObjectDecoder.class);
         ctx.pipeline().addLast(new ChunkedWriteHandler());
-        ctx.pipeline().addLast(new FilesInboundClientHandler());
+        ctx.pipeline().addLast(new FilesInboundClientHandler(filename, userDirectory, filesize, setButtonsAbleAndUpdateFilesLIstCallback));
     }
 
-    public static void createBasePipelineAfterDownloadForInOutCommandTraffic (ChannelHandlerContext ctx,Callback callback){
+    public static void createBasePipelineAfterDownloadForInOutCommandTraffic(ChannelHandlerContext ctx, Callback callback) {
         ctx.pipeline().remove(ChunkedWriteHandler.class);
         ctx.pipeline().addFirst(new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
         ctx.pipeline().addLast(new ClientInboundCommandHandler(callback));
