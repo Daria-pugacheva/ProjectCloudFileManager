@@ -13,8 +13,8 @@ import java.sql.Statement;
 
 public class DatabaseConnectionServiceImpl implements DatabaseConnectionService {
 
-    private Connection connection;
-    private Statement stmt;
+    private final Connection connection;
+    private final Statement stmt;
 
     private static final Logger LOGGER = LogManager.getLogger(DatabaseConnectionServiceImpl.class);
 
@@ -30,12 +30,12 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
 
     public DatabaseConnectionServiceImpl() {
         try {
-            Class.forName(ServerPropertiesReciever.getProperties("dbDriver"));
-            this.connection = DriverManager.getConnection(ServerPropertiesReciever.getProperties("dbURL"));
+            Class.forName(ServerPropertiesReciever.getDbDriver());
+            this.connection = DriverManager.getConnection(ServerPropertiesReciever.getDbURL());
             this.stmt = connection.createStatement();
             LOGGER.info("Сервер подключен к базе данных");
         } catch (ClassNotFoundException | SQLException throwables) {
-            LOGGER.throwing(Level.ERROR,throwables);
+            LOGGER.throwing(Level.ERROR, throwables);
             throw new RuntimeException("Не удается подключиться к базе данных");
         }
     }
@@ -46,14 +46,14 @@ public class DatabaseConnectionServiceImpl implements DatabaseConnectionService 
             try {
                 stmt.close();
             } catch (SQLException e) {
-                LOGGER.throwing(Level.ERROR,e);
+                LOGGER.throwing(Level.ERROR, e);
             }
         }
         if (connection != null) {
             try {
                 connection.close();
             } catch (SQLException e) {
-                LOGGER.throwing(Level.ERROR,e);
+                LOGGER.throwing(Level.ERROR, e);
             }
         }
     }

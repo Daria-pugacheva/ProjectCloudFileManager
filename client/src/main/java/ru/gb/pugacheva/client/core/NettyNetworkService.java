@@ -25,10 +25,9 @@ import java.util.Arrays;
 public class NettyNetworkService implements NetworkService {
 
     private static SocketChannel channel;
-    private static NettyNetworkService network;
 
-    private static final String SERVER_HOST = ClientPropertiesReciever.getProperties("host");
-    private static final int SERVER_PORT = Integer.parseInt(ClientPropertiesReciever.getProperties("port").trim());
+    private static final String SERVER_HOST = ClientPropertiesReciever.getHost();
+    private static final int SERVER_PORT = ClientPropertiesReciever.getPort();
 
     private static final Logger LOGGER = LogManager.getLogger(NettyNetworkService.class);
 
@@ -36,12 +35,8 @@ public class NettyNetworkService implements NetworkService {
     }
 
     public static NettyNetworkService initializeNetwork(Callback setButtonsAbleAndUpdateFilesLIstCallback) {
-        network = new NettyNetworkService();
+        NettyNetworkService network = new NettyNetworkService();
         initializeNetworkService(setButtonsAbleAndUpdateFilesLIstCallback);
-        return network;
-    }
-
-    public static NettyNetworkService getNetwork() { //DEN
         return network;
     }
 
@@ -65,7 +60,7 @@ public class NettyNetworkService implements NetworkService {
                 ChannelFuture future = bootstrap.connect(SERVER_HOST, SERVER_PORT).sync();
                 future.channel().closeFuture().sync();
             } catch (Exception e) {
-                LOGGER.throwing(Level.ERROR,e);
+                LOGGER.throwing(Level.ERROR, e);
             } finally {
                 workGroup.shutdownGracefully();
             }
@@ -77,7 +72,7 @@ public class NettyNetworkService implements NetworkService {
     @Override
     public void sendCommand(Command command) {
         channel.writeAndFlush(command);
-        LOGGER.info("С клиента на сервер отправлена команда " + command.getCommandName() + " с аргументами "+ Arrays.asList(command.getArgs()));
+        LOGGER.info("С клиента на сервер отправлена команда " + command.getCommandName() + " с аргументами " + Arrays.asList(command.getArgs()));
     }
 
     @Override
@@ -87,7 +82,7 @@ public class NettyNetworkService implements NetworkService {
             LOGGER.info("Началась передача файла на сервер по пути " + pathToFile);
             future.addListener((ChannelFutureListener) channelFuture -> LOGGER.info("Файл передан"));
         } catch (IOException e) {
-            LOGGER.throwing(Level.ERROR,e);
+            LOGGER.throwing(Level.ERROR, e);
         }
     }
 
@@ -98,7 +93,7 @@ public class NettyNetworkService implements NetworkService {
                 channel.close().sync();
             }
         } catch (InterruptedException e) {
-            LOGGER.throwing(Level.ERROR,e);
+            LOGGER.throwing(Level.ERROR, e);
         }
     }
 

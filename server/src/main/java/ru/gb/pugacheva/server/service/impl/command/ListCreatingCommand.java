@@ -13,9 +13,7 @@ import java.util.List;
 
 public class ListCreatingCommand implements CommandService {
 
-    private ListOfClientFilesInCloudCreatingService listOfClientFilesInCloudCreatingService;
     private static final Logger LOGGER = LogManager.getLogger(ListCreatingCommand.class);
-
 
     @Override
     public List<FileInfo> processCommand(Command command) {
@@ -28,7 +26,7 @@ public class ListCreatingCommand implements CommandService {
     }
 
     private List<FileInfo> process(String login) {
-        listOfClientFilesInCloudCreatingService = Factory.getListOfFilesService();
+        ListOfClientFilesInCloudCreatingService listOfClientFilesInCloudCreatingService = Factory.getListOfFilesService();
         return listOfClientFilesInCloudCreatingService.createServerFilesList(login);
     }
 

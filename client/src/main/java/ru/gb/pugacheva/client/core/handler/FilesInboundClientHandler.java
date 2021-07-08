@@ -15,18 +15,15 @@ import ru.gb.pugacheva.client.service.impl.ClientCommandDictionaryServiceImpl;
 import ru.gb.pugacheva.common.domain.Command;
 import ru.gb.pugacheva.common.domain.CommandType;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Arrays;
 
 public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
 
-    private String fileName;
-    private String userDirectory;
-    private Long fileSize;
-    private Callback setButtonsAbleAndUpdateFilesLIstCallback;
+    private final String fileName;
+    private final String userDirectory;
+    private final Long fileSize;
+    private final Callback setButtonsAbleAndUpdateFilesLIstCallback;
 
     private static final Logger LOGGER = LogManager.getLogger(FilesInboundClientHandler.class);
 
@@ -40,33 +37,39 @@ public class FilesInboundClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object chunkedFile) throws Exception {
         ByteBuf byteBuf = (ByteBuf) chunkedFile;
+
         String absoluteFileNameForClient = userDirectory + "\\" + fileName;
         File newfile = new File(absoluteFileNameForClient);
         newfile.createNewFile();
 
         LOGGER.info("Создан файл и запущен процесс приема файла на клиенте по пути " + absoluteFileNameForClient);
 
+        wrightNewFileContent(absoluteFileNameForClient, byteBuf);
+
+        createAnswerAboutSuccessDownload(newfile, ctx);
+
+        setButtonsAbleAndUpdateFilesLIstCallback.callback();
+    }
+
+    private void wrightNewFileContent(String absoluteFileNameForClient, ByteBuf byteBuf) throws IOException {
         try (OutputStream out = new BufferedOutputStream(new FileOutputStream(absoluteFileNameForClient, true))) {
             while (byteBuf.isReadable()) {
                 out.write(byteBuf.readByte());
             }
             byteBuf.release();
         }
-
-        createAnswerAboutSuccessDownload(newfile, ctx);
-
     }
 
     private void createAnswerAboutSuccessDownload(File file, ChannelHandlerContext ctx) {
         if (file.length() == fileSize) {
             LOGGER.info("Файл вычитан");
+
             ClientPipelineCheckoutService.createBasePipelineAfterDownloadForInOutCommandTraffic(ctx, setButtonsAbleAndUpdateFilesLIstCallback);
 
             String[] args = {fileName};
             ctx.writeAndFlush(new Command(CommandType.FINISHED_DOWNLOAD.toString(), args));
-            LOGGER.info("На сервер с клиента отправлена команда FINISHED_DOWNLOAD с аргументами " + Arrays.asList(args));
 
-            setButtonsAbleAndUpdateFilesLIstCallback.callback();
+            LOGGER.info("На сервер с клиента отправлена команда FINISHED_DOWNLOAD с аргументами " + Arrays.asList(args));
         }
     }
 

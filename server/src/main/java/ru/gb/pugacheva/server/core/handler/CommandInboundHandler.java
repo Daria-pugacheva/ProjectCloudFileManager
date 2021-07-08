@@ -22,7 +22,7 @@ import java.util.List;
 public class CommandInboundHandler extends SimpleChannelInboundHandler<Command> {
 
     private final CommandDictionaryService dictionaryService;
-    private final Path currentPath = Paths.get(ServerPropertiesReciever.getProperties("cloudDirectory"));
+    private final Path currentPath = Paths.get(ServerPropertiesReciever.getCloudDirectory());
     private static final Logger LOGGER = LogManager.getLogger(CommandInboundHandler.class);
 
     public CommandInboundHandler() {
@@ -33,48 +33,55 @@ public class CommandInboundHandler extends SimpleChannelInboundHandler<Command> 
     protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
         if (command.getCommandName().startsWith(CommandType.LOGIN.toString())) {
             ctx.writeAndFlush(createLoginAccept(command));
+
         } else if (command.getCommandName().startsWith(CommandType.FILESLIST.toString())) {
             ctx.writeAndFlush(createListOfClientFilesInCloud(command));
+
         } else if (command.getCommandName().startsWith(CommandType.UPLOAD.toString())) {
             LOGGER.info("От клиента на сервере получена команда UPLOAD с аргументами " + Arrays.asList(command.getArgs()));
 
-            Path pathToUserDirectory = currentPath.resolve((String) command.getArgs()[2]);
-            String userDirectory = pathToUserDirectory.toString() + "\\";
             ServerPipelineCheckoutService.createPipelineForInboundFilesRecieving(ctx, (String) command.getArgs()[0],
-                    userDirectory, (String) command.getArgs()[2], (Long) command.getArgs()[3]);
+                    findUserDirectoryValue(command), (String) command.getArgs()[2], (Long) command.getArgs()[3]);
 
             ctx.writeAndFlush(new Command(CommandType.READY_TO_UPLOAD.toString(), command.getArgs()));
             LOGGER.info("C сервера клиенту отправлена команда READY_TO_UPLOAD с аргументами " + Arrays.asList(command.getArgs()));
+
         } else if (command.getCommandName().startsWith(CommandType.DOWNLOAD.toString())) {
             ctx.writeAndFlush(createReadytoDownloadAccept(command));
             ServerPipelineCheckoutService.createPipelineForOutboundFilesSending(ctx);
+
         } else if (command.getCommandName().startsWith(CommandType.READY_TO_RECIEVE.toString())) {
             ChannelFuture future = ctx.channel().writeAndFlush(new ChunkedFile(new File((String) command.getArgs()[1])));
             LOGGER.info("Началась с сервера на клиента передача файла: " + command.getArgs()[1]);
             future.addListener((ChannelFutureListener) channelFuture -> LOGGER.info("Файл передан"));
+
         } else if (command.getCommandName().startsWith(CommandType.FINISHED_DOWNLOAD.toString())) {
             ServerPipelineCheckoutService.createBasePipelineAfterDownloadForInOutCommandTraffic(ctx);
         }
     }
 
+    private String findUserDirectoryValue(Command command) {
+        Path pathToUserDirectory = currentPath.resolve((String) command.getArgs()[2]);
+        return pathToUserDirectory.toString() + "\\";
+    }
+
+
     private Command createLoginAccept(Command command) {
         String resultOfCommand = (String) dictionaryService.processCommand(command);
         String[] textCommand = resultOfCommand.split("\\s");
         String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
-        Command result = new Command(textCommand[0], commandArgs);
-        LOGGER.info("Клиенту отправляется ответ на запрос авторизации " + result.getCommandName() + Arrays.toString(result.getArgs()));
-        return result;
+
+        LOGGER.info("Клиенту отправляется ответ на запрос авторизации " + textCommand[0] + Arrays.toString(commandArgs));
+        return new Command(textCommand[0], commandArgs);
     }
 
     private Command createListOfClientFilesInCloud(Command command) {
         LOGGER.info("От клиента на сервер поступила команда FILESLIST (запрос на отправку списка файлов в облаке");
         List<FileInfo> resultListOfFiles = (List<FileInfo>) dictionaryService.processCommand(command);
         String pathToClientDirectory = command.getArgs()[0] + ":\\";
-        Object[] args = new Object[2];
-        args[0] = pathToClientDirectory;
-        args[1] = resultListOfFiles;
-        Command result = new Command(CommandType.CLOUD_FILESLIST.toString(), args);
-        return result;
+        Object[] args = new Object[]{pathToClientDirectory, resultListOfFiles};
+
+        return new Command(CommandType.CLOUD_FILESLIST.toString(), args);
     }
 
     private Command createReadytoDownloadAccept(Command command) {
@@ -82,9 +89,9 @@ public class CommandInboundHandler extends SimpleChannelInboundHandler<Command> 
         Path pathToFile = currentPath.resolve((String) command.getArgs()[1]).resolve((String) command.getArgs()[0]);
         String absolutePathOfDownloadFile = pathToFile.toString();
         Object[] newArgs = {command.getArgs()[0], absolutePathOfDownloadFile, command.getArgs()[2], command.getArgs()[3]};
-        Command result = new Command(CommandType.READY_TO_DOWNLOAD.toString(), newArgs);
+
         LOGGER.info("C сервера на клиент отправлена команда READY_TO_DOWNLOAD с аргументами" + Arrays.asList(newArgs));
-        return result;
+        return new Command(CommandType.READY_TO_DOWNLOAD.toString(), newArgs);
     }
 
     @Override

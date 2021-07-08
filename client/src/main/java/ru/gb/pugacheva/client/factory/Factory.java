@@ -6,7 +6,7 @@ import ru.gb.pugacheva.client.service.CommandService;
 import ru.gb.pugacheva.client.core.NetworkService;
 import ru.gb.pugacheva.client.service.impl.ClientCommandDictionaryServiceImpl;
 import ru.gb.pugacheva.client.core.NettyNetworkService;
-import ru.gb.pugacheva.client.service.impl.command.*;
+import ru.gb.pugacheva.client.service.impl.ui_command.*;
 
 import java.util.Arrays;
 import java.util.List;

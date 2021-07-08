@@ -8,5 +8,4 @@ public interface AuthenticationService {
 
     boolean registerClient(String login, String password);
 
-
 }

@@ -34,18 +34,6 @@ public class FileInfo implements Serializable {
 
     private long size;
 
-//    public String getFileName() {
-//        return fileName;
-//    }
-//
-//    public FileType getFileType() {
-//        return fileType;
-//    }
-//
-//    public long getSize() {
-//        return size;
-//    }
-
     public FileInfo(Path path) {
         try {
             this.path = path.toString();
@@ -60,13 +48,4 @@ public class FileInfo implements Serializable {
         }
     }
 
-//    @Override
-//    public String toString() {
-//        return "FileInfo{" +
-//                "fileName='" + fileName + '\'' +
-//                ", fileType=" + fileType +
-//                ", size=" + size +
-//                ", path=" + path +
-//                '}';
-//    }
 }

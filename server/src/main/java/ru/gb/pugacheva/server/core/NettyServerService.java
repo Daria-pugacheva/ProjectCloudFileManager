@@ -18,10 +18,9 @@ import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.DatabaseConnectionService;
 import ru.gb.pugacheva.server.service.impl.ServerPropertiesReciever;
 
-
 public class NettyServerService implements ServerService {
 
-    private static final int SERVER_PORT = Integer.parseInt(ServerPropertiesReciever.getProperties("port").trim());
+    private static final int SERVER_PORT = ServerPropertiesReciever.getPort();
     private static DatabaseConnectionService databaseConnectionService;
     private static final Logger LOGGER = LogManager.getLogger(NettyServerService.class);
 

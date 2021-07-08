@@ -69,43 +69,42 @@ public class Controller implements Initializable {
         makeClientTable();
         makeServerTable();
 
-        createClientListFiles(Paths.get(ClientPropertiesReciever.getProperties("clientDirectory")));
+        createClientListFiles(Paths.get(ClientPropertiesReciever.getClientDirectory()));
     }
 
     private void initializeNetworkService() {
         networkService = Factory.initializeNetworkService(() -> {
             downloadButton.setDisable(false);
             uploadButton.setDisable(false);
-            createClientListFiles(Paths.get(clientPathToFile.getText()));
+            updateClientListFilesOnGUI(Paths.get(clientPathToFile.getText()));
         });
     }
 
     private void makeClientTable() {
-        clientFiles.getColumns().addAll(createFileTypeColumn("Тип", 48),
-                createFileNAmeColumn("Имя файла", 240),
-                createFileSizeColumn("Размер файла", 120));
+        clientFiles.getColumns().addAll(createFileTypeColumn(), createFileNAmeColumn(), createFileSizeColumn());
 
         moveIntoDirectory(clientFiles, clientPathToFile);
     }
 
-    private TableColumn<FileInfo, String> createFileTypeColumn(String nameOFColumn, int prefWidth) {
-        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>(nameOFColumn);
+    private TableColumn<FileInfo, String> createFileTypeColumn() {
+        TableColumn<FileInfo, String> clientFileTypeColumn = new TableColumn<>("Тип");
         clientFileTypeColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileType().getName()));
-        clientFileTypeColumn.setPrefWidth(prefWidth);
+        clientFileTypeColumn.setPrefWidth(48);
         return clientFileTypeColumn;
     }
 
-    private TableColumn<FileInfo, String> createFileNAmeColumn(String nameOFColumn, int prefWidth) {
-        TableColumn<FileInfo, String> clientFileNameColumn = new TableColumn<>(nameOFColumn);
+    private TableColumn<FileInfo, String> createFileNAmeColumn() {
+        TableColumn<FileInfo, String> clientFileNameColumn = new TableColumn<>("Имя файла");
         clientFileNameColumn.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFileName()));
-        clientFileNameColumn.setPrefWidth(prefWidth);
+        clientFileNameColumn.setPrefWidth(240);
         return clientFileNameColumn;
     }
 
-    private TableColumn<FileInfo, Long> createFileSizeColumn(String nameOFColumn, int prefWidth) {
-        TableColumn<FileInfo, Long> clientFileSizeColumn = new TableColumn<>(nameOFColumn);
+    private TableColumn<FileInfo, Long> createFileSizeColumn() {
+        TableColumn<FileInfo, Long> clientFileSizeColumn = new TableColumn<>("Размер файла");
         clientFileSizeColumn.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
-        clientFileSizeColumn.setPrefWidth(prefWidth);
+        clientFileSizeColumn.setPrefWidth(120);
+
         clientFileSizeColumn.setCellFactory(column -> {
             return new TableCell<FileInfo, Long>() {
                 @Override
@@ -128,9 +127,7 @@ public class Controller implements Initializable {
     }
 
     private void makeServerTable() {
-        serverFiles.getColumns().addAll(createFileTypeColumn("Тип", 48),
-                createFileNAmeColumn("Имя файла", 240),
-                createFileSizeColumn("Размер файла", 120));
+        serverFiles.getColumns().addAll(createFileTypeColumn(), createFileNAmeColumn(), createFileSizeColumn());
     }
 
     private void moveIntoDirectory(TableView<FileInfo> tableView, TextField textField) {
@@ -190,21 +187,30 @@ public class Controller implements Initializable {
         if (!networkService.isConnected()) {
             initializeNetworkService();
         }
-        String[] textCommand = {CommandType.LOGIN.toString(), loginField.getText(), passwordField.getText()}; //"login"
-        if (textCommand.length > 2) {
+
+        if (checkCorrectValueInLoginAndPassworgFields()) {
+            String[] textCommand = {CommandType.LOGIN.toString(), loginField.getText(), passwordField.getText()}; //"login"
             String[] commandArgs = Arrays.copyOfRange(textCommand, 1, textCommand.length);
             networkService.sendCommand(new Command(textCommand[0], commandArgs));
-        } else {
-            createAlert("Не все поля для регистрации заполнены: введите логин и пароль");
+
+            loginField.clear();
+            passwordField.clear();
         }
-        loginField.clear();
-        passwordField.clear();
+    }
+
+    private boolean checkCorrectValueInLoginAndPassworgFields() {
+        if (loginField.getText().isEmpty() || passwordField.getText().isEmpty()) {
+            createAlert("Не заполнен логин или пароль. Заполните все поля для авторизации");
+            return false;
+        }
+        return true;
     }
 
     public void download(ActionEvent actionEvent) {
         if (!networkService.isConnected()) {
             initializeNetworkService();
         }
+
         if (!serverFiles.isFocused()) {
             createAlert("Не выбран файл для загрузки в облаке");
         } else {
@@ -219,7 +225,9 @@ public class Controller implements Initializable {
         Long fileSize = serverFiles.getSelectionModel().getSelectedItem().getSize();
         String userDirectoryForDownload = clientPathToFile.getText();
         Object[] commandArgs = {getSelectedFilename(serverFiles), login, fileSize, userDirectoryForDownload};
+
         Command command = new Command(CommandType.DOWNLOAD.toString(), commandArgs);
+
         LOGGER.info("Отправлена команда DOWNLOAD для файла " + getSelectedFilename(serverFiles) +
                 " от клиента " + login + " ,размер файла " + fileSize + " ,директория для загрузки файла " + userDirectoryForDownload);
         return command;
@@ -229,6 +237,7 @@ public class Controller implements Initializable {
         if (!networkService.isConnected()) {
             initializeNetworkService();
         }
+
         if (!clientFiles.isFocused()) {
             createAlert("Не выбран файл для выгрузки в облако");
         } else {
@@ -243,7 +252,9 @@ public class Controller implements Initializable {
         String absolutePathOfUploadFile = getcurrentPath(clientPathToFile) + "\\" + getSelectedFilename(clientFiles);
         Long fileSize = clientFiles.getSelectionModel().getSelectedItem().getSize();
         Object[] commandArgs = {getSelectedFilename(clientFiles), absolutePathOfUploadFile, login, fileSize};
+
         Command command = new Command(CommandType.UPLOAD.toString(), commandArgs);
+
         LOGGER.info("Отправлена команда UPLOAD для файла " + getSelectedFilename(clientFiles) +
                 " по пути " + absolutePathOfUploadFile + " от клиента " + login);
         return command;
@@ -281,6 +292,10 @@ public class Controller implements Initializable {
 
     public void createAlertOnGUI(String textOfAlert) {
         Platform.runLater(() -> createAlert(textOfAlert));
+    }
+
+    public void updateClientListFilesOnGUI(Path path) {
+        Platform.runLater(() -> createClientListFiles(path));
     }
 
 }

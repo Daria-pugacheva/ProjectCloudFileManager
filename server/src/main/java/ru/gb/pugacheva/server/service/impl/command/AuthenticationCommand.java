@@ -13,10 +13,10 @@ import java.io.File;
 
 public class AuthenticationCommand implements CommandService {
 
-    private AuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
     private static final Logger LOGGER = LogManager.getLogger(AuthenticationCommand.class);
 
-    public AuthenticationCommand(){
+    public AuthenticationCommand() {
         this.authenticationService = Factory.getAuthenticationService();
     }
 
@@ -30,19 +30,20 @@ public class AuthenticationCommand implements CommandService {
         return process((String) command.getArgs()[0], (String) command.getArgs()[1]);
     }
 
-
     private String process(String login, String password) {
         if (authenticationService.isClientRegistered(login, password)) {
-            return CommandType.LOGIN_OK.toString() + " " + login;
+            return CommandType.LOGIN_OK + " " + login;
+
         } else if (authenticationService.registerClient(login, password)) {
             createUserDirectoryInCloud(login);
-            return CommandType.LOGIN_OK.toString() + " " + login;
+            return CommandType.LOGIN_OK + " " + login;
         }
-        return CommandType.REGISTRATION_FAILED.toString() + " " + login;
+
+        return CommandType.REGISTRATION_FAILED + " " + login;
     }
 
-    private void createUserDirectoryInCloud (String login){
-        String pathToDir = String.format(ServerPropertiesReciever.getProperties("cloudDirectory") + "/%s/", login);
+    private void createUserDirectoryInCloud(String login) {
+        String pathToDir = String.format(ServerPropertiesReciever.getCloudDirectory() + "/%s/", login);
         File file = new File(pathToDir);
         file.mkdir();
     }

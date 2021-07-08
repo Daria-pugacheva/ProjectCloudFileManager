@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class ListOfClientFilesInCloudCreatingService {
 
-    private final Path currentPath = Paths.get(ServerPropertiesReciever.getProperties("cloudDirectory"));
+    private final Path currentPath = Paths.get(ServerPropertiesReciever.getCloudDirectory());
     private static final Logger LOGGER = LogManager.getLogger(ListOfClientFilesInCloudCreatingService.class);
 
 
@@ -24,7 +24,7 @@ public class ListOfClientFilesInCloudCreatingService {
             List<FileInfo> list = Files.list(userDirectory).map(FileInfo::new).collect(Collectors.toList());
             return list;
         } catch (IOException e) {
-            LOGGER.throwing(Level.ERROR,e);
+            LOGGER.throwing(Level.ERROR, e);
             return null;
         }
     }

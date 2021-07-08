@@ -10,7 +10,7 @@ public class ClientPropertiesReciever {
     private static final String pathToProperties = "client/src/main/resources/client.properties";
     private static final Properties properties = new Properties();
 
-    public static String getProperties (String propertyName){
+    private static String getProperties (String propertyName){
         try (InputStream in = new FileInputStream(pathToProperties)){
             properties.load(in);
             return properties.getProperty(propertyName);
@@ -18,4 +18,18 @@ public class ClientPropertiesReciever {
             throw new IllegalArgumentException("Значение " + propertyName + " отсутствует");
         }
     }
+
+    public static String getHost (){
+        return ClientPropertiesReciever.getProperties("host");
+    }
+
+    public static int getPort (){
+        return Integer.parseInt(ClientPropertiesReciever.getProperties("port").trim());
+    }
+
+    public static String getClientDirectory (){
+        return ClientPropertiesReciever.getProperties("clientDirectory");
+    }
+
+
 }

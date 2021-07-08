@@ -13,14 +13,14 @@ import java.sql.SQLException;
 
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private DatabaseConnectionService dbConnection;
+    private final DatabaseConnectionService dbConnection;
     private PreparedStatement registrationSearching;
     private PreparedStatement loginChecking;
     private PreparedStatement newClientCreation;
 
     private static final Logger LOGGER = LogManager.getLogger(AuthenticationServiceImpl.class);
 
-    public AuthenticationServiceImpl (){
+    public AuthenticationServiceImpl() {
         this.dbConnection = NettyServerService.getDatabaseConnectionService();
         createPreparedStatements();
     }
@@ -31,7 +31,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
             this.loginChecking = dbConnection.getConnection().prepareStatement("select id from clients where login = ?;");
             this.newClientCreation = dbConnection.getConnection().prepareStatement("insert into clients (login, pass) values (?,?);");
         } catch (SQLException throwables) {
-            LOGGER.throwing(Level.ERROR,throwables);
+            LOGGER.throwing(Level.ERROR, throwables);
         }
     }
 
@@ -41,13 +41,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         try {
             registrationSearching.setString(1, login);
             registrationSearching.setString(2, password);
+
             try (ResultSet rs = registrationSearching.executeQuery()) {
                 if (rs.next()) {
                     return true;
                 }
             }
-        }catch (SQLException throwables) {
-            LOGGER.throwing(Level.ERROR,throwables);
+        } catch (SQLException throwables) {
+            LOGGER.throwing(Level.ERROR, throwables);
         }
         return false;
     }
@@ -61,8 +62,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     return true;
                 }
             }
-        }catch (SQLException throwables) {
-            LOGGER.throwing(Level.ERROR,throwables);
+        } catch (SQLException throwables) {
+            LOGGER.throwing(Level.ERROR, throwables);
         }
         return false;
     }
@@ -71,12 +72,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public boolean registerClient(String login, String password) {
         if (!isClientRegistered(login, password) && !isLoginBusy(login)) {
             try {
-                newClientCreation.setString(1,login);
-                newClientCreation.setString(2,password);
+                newClientCreation.setString(1, login);
+                newClientCreation.setString(2, password);
                 newClientCreation.executeUpdate();
                 return true;
             } catch (SQLException e) {
-                LOGGER.throwing(Level.ERROR,e);
+                LOGGER.throwing(Level.ERROR, e);
             }
         } else if (isLoginBusy(login)) {
             LOGGER.info("логин занят");

@@ -15,17 +15,14 @@ import ru.gb.pugacheva.server.core.ServerPipelineCheckoutService;
 import ru.gb.pugacheva.server.factory.Factory;
 import ru.gb.pugacheva.server.service.CommandDictionaryService;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
 
-    private  String fileName;
-    private  String userDirectory;
-    private  String login;
-    private  Long fileSize;
+    private final String fileName;
+    private final String userDirectory;
+    private final String login;
+    private final Long fileSize;
 
     public FilesInboundHandler(String fileName, String userDirectory, String login, Long fileSize) {
         this.fileName = fileName;
@@ -39,23 +36,28 @@ public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object chunkedFile) throws Exception {
         ByteBuf byteBuf = (ByteBuf) chunkedFile;
+
         String absoluteFileNameForCloud = userDirectory + "\\" + fileName;
         File newfile = new File(absoluteFileNameForCloud);
         newfile.createNewFile();
         LOGGER.info("Создан файл и запущен прием фала а сервере по пути " + absoluteFileNameForCloud);
 
+        wrightNewFileContent(absoluteFileNameForCloud, byteBuf);
+
+        createAnsweraboutSuccessUpload(newfile, ctx);
+
+    }
+
+    private void wrightNewFileContent(String absoluteFileNameForCloud, ByteBuf byteBuf) throws IOException {
         try (OutputStream out = new BufferedOutputStream(new FileOutputStream(absoluteFileNameForCloud, true))) {
             while (byteBuf.isReadable()) {
                 out.write(byteBuf.readByte());
             }
             byteBuf.release();
         }
-
-        createAnsweraboutSuccessUpload(newfile,ctx);
-
     }
 
-    private void createAnsweraboutSuccessUpload (File file,ChannelHandlerContext ctx){
+    private void createAnsweraboutSuccessUpload(File file, ChannelHandlerContext ctx) {
         if (file.length() == fileSize) {
             LOGGER.info("Файл вычитан");
             ServerPipelineCheckoutService.createBasePipelineAfterUploadForInOutCommandTraffic(ctx);
@@ -63,7 +65,6 @@ public class FilesInboundHandler extends ChannelInboundHandlerAdapter {
             String[] args = {fileName, login};
             ctx.writeAndFlush(new Command(CommandType.UPLOAD_FINISHED.toString(), args));
             LOGGER.info("На клиент с сервера отправлена команда UPLOAD_FINISHED с аргументами " + args);
-
         }
     }
 
